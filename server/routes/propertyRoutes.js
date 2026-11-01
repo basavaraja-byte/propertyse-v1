@@ -1,6 +1,5 @@
-
 const express = require("express");
-const supabase = require("../config/supabaseClient");
+const db = require("../config/db");
 
 const router = express.Router();
 
@@ -9,7 +8,9 @@ const VALID_STATUSES = new Set(["Vacant", "Occupied", "Maintenance"]);
 
 const isUuid = (value) =>
   typeof value === "string" &&
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
 
 function normalizeCompanyId(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -19,33 +20,26 @@ function isAllowedCompany(value) {
   return /^[A-Za-z0-9_-]{2,64}$/.test(normalizeCompanyId(value));
 }
 
-// Validate a real calendar date in YYYY-MM-DD format.
+// Validate calendar date in YYYY-MM-DD format.
 function validDate(value) {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return false;
   }
-
   const date = new Date(`${value}T00:00:00.000Z`);
-
   return (
-    !Number.isNaN(date.getTime()) &&
-    date.toISOString().slice(0, 10) === value
+    !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
   );
 }
 
-// A lease remains valid through its end date.
-// It expires the day after the end date.
+// A lease remains valid through its end date and expires the day after.
 function leaseExpired(endDate) {
   if (!validDate(endDate)) return false;
-
   const today = new Date().toISOString().slice(0, 10);
   return endDate < today;
 }
 
 function formatProperty(row) {
   const expired = leaseExpired(row.lease_end_date);
-
-  // Present expired leases as vacant unless maintenance is ongoing.
   const effectiveStatus =
     expired && row.status !== "Maintenance" ? "Vacant" : row.status;
 
@@ -87,59 +81,50 @@ function tenantPayload(body = {}) {
 }
 
 async function getCompanyUnitCount(company) {
-  const { count, error } = await supabase
-    .from("properties")
-    .select("id", { count: "exact", head: true })
-    .eq("company_id", company);
-
-  if (error) throw error;
-  return count || 0;
+  const result = await db.query(
+    "SELECT COUNT(*)::int AS count FROM public.properties WHERE company_id = $1",
+    [company]
+  );
+  return result.rows[0]?.count || 0;
 }
 
-// Clear expired tenants from storage.
-// Maintenance status is preserved while unfinished tickets exist.
+// Automatically clear expired tenants from storage
 async function expireCompanyLeases(company) {
   const today = new Date().toISOString().slice(0, 10);
 
-  const { data: expiredUnits, error } = await supabase
-    .from("properties")
-    .select("id, company_id, status, tenant_full_name")
-    .eq("company_id", company)
-    .not("lease_end_date", "is", null)
-    .lt("lease_end_date", today)
-    .neq("tenant_full_name", "");
+  const expiredResult = await db.query(
+    `SELECT id, company_id, status, tenant_full_name
+     FROM public.properties
+     WHERE company_id = $1
+       AND lease_end_date IS NOT NULL
+       AND lease_end_date < $2
+       AND tenant_full_name <> ''`,
+    [company, today]
+  );
 
-  if (error) throw error;
+  for (const unit of expiredResult.rows) {
+    const ticketResult = await db.query(
+      `SELECT id FROM public.maintenance_tickets
+       WHERE company_id = $1 AND property_id = $2 AND status IN ('Open', 'In Progress')`,
+      [company, unit.id]
+    );
 
-  for (const unit of expiredUnits || []) {
-    const { data: tickets, error: ticketError } = await supabase
-      .from("maintenance_tickets")
-      .select("id")
-      .eq("company_id", company)
-      .eq("property_id", unit.id)
-      .in("status", ["Open", "In Progress"]);
+    const hasUnfinishedTickets = ticketResult.rows.length > 0;
+    const targetStatus = hasUnfinishedTickets ? "Maintenance" : "Vacant";
 
-    if (ticketError) throw ticketError;
-
-    const hasUnfinishedTickets = Boolean(tickets?.length);
-    const now = new Date().toISOString();
-
-    const { error: updateError } = await supabase
-      .from("properties")
-      .update({
-        tenant_full_name: "",
-        tenant_phone: "",
-        tenant_email: "",
-        lease_start_date: null,
-        lease_end_date: null,
-        status: hasUnfinishedTickets ? "Maintenance" : "Vacant",
-        vacant_since: hasUnfinishedTickets ? null : now,
-        updated_at: now,
-      })
-      .eq("id", unit.id)
-      .eq("company_id", company);
-
-    if (updateError) throw updateError;
+    await db.query(
+      `UPDATE public.properties
+       SET tenant_full_name = '',
+           tenant_phone = '',
+           tenant_email = '',
+           lease_start_date = NULL,
+           lease_end_date = NULL,
+           status = $1,
+           vacant_since = CASE WHEN $1 = 'Vacant' THEN NOW() ELSE NULL END,
+           updated_at = NOW()
+       WHERE id = $2 AND company_id = $3`,
+      [targetStatus, unit.id, company]
+    );
   }
 }
 
@@ -156,24 +141,22 @@ router.get("/", async (req, res) => {
 
     await expireCompanyLeases(company);
 
-    const { data, error } = await supabase
-      .from("properties")
-      .select("*")
-      .eq("company_id", company)
-      .order("created_at", { ascending: false });
+    const result = await db.query(
+      "SELECT * FROM public.properties WHERE company_id = $1 ORDER BY created_at DESC",
+      [company]
+    );
 
-    if (error) throw error;
-
-    return res.status(200).json((data || []).map(formatProperty));
+    return res.status(200).json(result.rows.map(formatProperty));
   } catch (error) {
     console.error("Get properties error:", error);
     return res.status(500).json({
-      message: "Could not load properties. Check the Supabase schema and maintenance_tickets table.",
+      message:
+        "Could not load properties. Check the Supabase schema and maintenance_tickets table.",
     });
   }
 });
 
-// POST /api/properties - create one unit at a time.
+// POST /api/properties - create one unit at a time
 router.post("/", async (req, res) => {
   try {
     const {
@@ -205,10 +188,25 @@ router.post("/", async (req, res) => {
       });
     }
 
+    // Business rule: Unit number must be an integer between 1 and 20
+    const trimmedUnitNumber = unitNumber.trim();
+    const parsedUnitNum = Number(trimmedUnitNumber);
+    if (
+      !Number.isInteger(parsedUnitNum) ||
+      parsedUnitNum < 1 ||
+      parsedUnitNum > 20 ||
+      String(parsedUnitNum) !== trimmedUnitNumber
+    ) {
+      return res.status(400).json({
+        message: "Unit number must be an integer between 1 and 20.",
+      });
+    }
+
     const rent = Number(annualRent);
     const repairCost = Number(estimatedRepairCost);
     const daysToRent = Number(estimatedDaysToRent);
 
+    // Business rule: Annual rent must not be negative
     if (
       annualRent === undefined ||
       annualRent === null ||
@@ -231,60 +229,69 @@ router.post("/", async (req, res) => {
     }
 
     const count = await getCompanyUnitCount(company);
-
     if (count >= COMPANY_UNIT_LIMIT) {
       return res.status(409).json({
         message: "This company has reached its 20-unit limit.",
       });
     }
 
-    const now = new Date().toISOString();
+    // Business rule: Duplicate unit numbers within the same company must be rejected
+    const existingUnit = await db.query(
+      "SELECT id FROM public.properties WHERE company_id = $1 AND unit_number = $2",
+      [company, trimmedUnitNumber]
+    );
 
-    const row = {
-      company_id: company,
-      property_name: propertyName.trim(),
-      building_number:
-        typeof buildingNumber === "string" && buildingNumber.trim()
-          ? buildingNumber.trim()
-          : "Main property",
-      unit_number: unitNumber.trim(),
-      annual_rent: rent,
-      status,
-      estimated_repair_cost: repairCost,
-      tenant_ready: tenantReady,
-      estimated_days_to_rent: daysToRent,
-      vacant_since: status === "Vacant" ? now : null,
-      tenant_full_name: "",
-      tenant_phone: "",
-      tenant_email: "",
-      lease_start_date: null,
-      lease_end_date: null,
-      updated_at: now,
-    };
-
-    const { data, error } = await supabase
-      .from("properties")
-      .insert(row)
-      .select()
-      .single();
-
-    if (error) {
-      if (error.code === "23505") {
-        return res.status(409).json({
-          message: "This unit already exists for this company.",
-        });
-      }
-      throw error;
+    if (existingUnit.rows.length > 0) {
+      return res.status(409).json({
+        message: "This unit already exists for this company.",
+      });
     }
 
-    return res.status(201).json(formatProperty(data));
+    const bNumber =
+      typeof buildingNumber === "string" && buildingNumber.trim()
+        ? buildingNumber.trim()
+        : "Main property";
+
+    const insertSql = `
+      INSERT INTO public.properties (
+        company_id, property_name, building_number, unit_number,
+        annual_rent, status, estimated_repair_cost, tenant_ready,
+        estimated_days_to_rent, vacant_since, tenant_full_name,
+        tenant_phone, tenant_email, lease_start_date, lease_end_date,
+        created_at, updated_at
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9,
+        CASE WHEN $6 = 'Vacant' THEN NOW() ELSE NULL END,
+        '', '', '', NULL, NULL, NOW(), NOW()
+      )
+      RETURNING *
+    `;
+
+    const result = await db.query(insertSql, [
+      company,
+      propertyName.trim(),
+      bNumber,
+      trimmedUnitNumber,
+      rent,
+      status,
+      repairCost,
+      tenantReady,
+      daysToRent,
+    ]);
+
+    return res.status(201).json(formatProperty(result.rows[0]));
   } catch (error) {
     console.error("Create property error:", error);
+    if (error.code === "23505") {
+      return res.status(409).json({
+        message: "This unit already exists for this company.",
+      });
+    }
     return res.status(500).json({ message: "Could not create the unit." });
   }
 });
 
-// PATCH /api/properties/:id/tenant
+// PATCH /api/properties/:id/tenant - assign, update, or clear tenant
 router.patch("/:id/tenant", async (req, res) => {
   try {
     const { id } = req.params;
@@ -309,20 +316,19 @@ router.patch("/:id/tenant", async (req, res) => {
 
     await expireCompanyLeases(company);
 
-    const { data: current, error: findError } = await supabase
-      .from("properties")
-      .select("*")
-      .eq("id", id)
-      .eq("company_id", company)
-      .maybeSingle();
-
-    if (findError) throw findError;
+    const findResult = await db.query(
+      "SELECT * FROM public.properties WHERE id = $1 AND company_id = $2",
+      [id, company]
+    );
+    const current = findResult.rows[0];
 
     if (!current) {
-      return res.status(404).json({ message: "Unit not found for this company." });
+      return res
+        .status(404)
+        .json({ message: "Unit not found for this company." });
     }
 
-    let changes;
+    let updatedResult;
 
     if (action === "clear") {
       if (!current.tenant_full_name && current.status !== "Occupied") {
@@ -331,28 +337,28 @@ router.patch("/:id/tenant", async (req, res) => {
         });
       }
 
-      const { data: unfinishedTickets, error: ticketError } = await supabase
-        .from("maintenance_tickets")
-        .select("id")
-        .eq("company_id", company)
-        .eq("property_id", id)
-        .in("status", ["Open", "In Progress"]);
+      const ticketsResult = await db.query(
+        `SELECT id FROM public.maintenance_tickets
+         WHERE company_id = $1 AND property_id = $2 AND status IN ('Open', 'In Progress')`,
+        [company, id]
+      );
+      const hasUnfinishedTickets = ticketsResult.rows.length > 0;
+      const targetStatus = hasUnfinishedTickets ? "Maintenance" : "Vacant";
 
-      if (ticketError) throw ticketError;
-
-      const hasUnfinishedTickets = Boolean(unfinishedTickets?.length);
-      const now = new Date().toISOString();
-
-      changes = {
-        tenant_full_name: "",
-        tenant_phone: "",
-        tenant_email: "",
-        lease_start_date: null,
-        lease_end_date: null,
-        status: hasUnfinishedTickets ? "Maintenance" : "Vacant",
-        vacant_since: hasUnfinishedTickets ? null : now,
-        updated_at: now,
-      };
+      const clearSql = `
+        UPDATE public.properties
+        SET tenant_full_name = '',
+            tenant_phone = '',
+            tenant_email = '',
+            lease_start_date = NULL,
+            lease_end_date = NULL,
+            status = $1,
+            vacant_since = CASE WHEN $1 = 'Vacant' THEN NOW() ELSE NULL END,
+            updated_at = NOW()
+        WHERE id = $2 AND company_id = $3
+        RETURNING *
+      `;
+      updatedResult = await db.query(clearSql, [targetStatus, id, company]);
     } else {
       const tenant = tenantPayload(req.body?.tenant || req.body);
 
@@ -367,7 +373,8 @@ router.patch("/:id/tenant", async (req, res) => {
         !validDate(tenant.lease_end_date)
       ) {
         return res.status(400).json({
-          message: "Valid lease start and end dates in YYYY-MM-DD format are required.",
+          message:
+            "Valid lease start and end dates in YYYY-MM-DD format are required.",
         });
       }
 
@@ -375,7 +382,8 @@ router.patch("/:id/tenant", async (req, res) => {
 
       if (tenant.lease_end_date < today) {
         return res.status(400).json({
-          message: "Lease end date cannot be in the past. Choose today or a future date.",
+          message:
+            "Lease end date cannot be in the past. Choose today or a future date.",
         });
       }
 
@@ -385,10 +393,7 @@ router.patch("/:id/tenant", async (req, res) => {
         });
       }
 
-      if (
-        tenant.lease_start_date < today &&
-        action === "assign"
-      ) {
+      if (tenant.lease_start_date < today && action === "assign") {
         return res.status(400).json({
           message: "A new tenant's lease start date cannot be in the past.",
         });
@@ -409,46 +414,59 @@ router.patch("/:id/tenant", async (req, res) => {
         current.tenant_full_name
       ) {
         return res.status(409).json({
-          message: "This flat already has a tenant. Use update to edit tenant details.",
+          message:
+            "This flat already has a tenant. Use update to edit tenant details.",
         });
       }
 
-      changes = {
-        ...tenant,
-        status: current.status === "Maintenance" ? "Maintenance" : "Occupied",
-        vacant_since: null,
-        updated_at: new Date().toISOString(),
-      };
+      const targetStatus =
+        current.status === "Maintenance" ? "Maintenance" : "Occupied";
+
+      const updateSql = `
+        UPDATE public.properties
+        SET tenant_full_name = $1,
+            tenant_phone = $2,
+            tenant_email = $3,
+            lease_start_date = $4,
+            lease_end_date = $5,
+            status = $6,
+            vacant_since = NULL,
+            updated_at = NOW()
+        WHERE id = $7 AND company_id = $8
+        RETURNING *
+      `;
+
+      updatedResult = await db.query(updateSql, [
+        tenant.tenant_full_name,
+        tenant.tenant_phone,
+        tenant.tenant_email,
+        tenant.lease_start_date,
+        tenant.lease_end_date,
+        targetStatus,
+        id,
+        company,
+      ]);
     }
-
-    const { data, error } = await supabase
-      .from("properties")
-      .update(changes)
-      .eq("id", id)
-      .eq("company_id", company)
-      .select()
-      .single();
-
-    if (error) throw error;
 
     return res.status(200).json({
       message:
         action === "clear"
           ? "Tenant assignment cleared."
           : action === "assign"
-            ? "Tenant assigned."
-            : "Tenant details updated.",
-      property: formatProperty(data),
+          ? "Tenant assigned."
+          : "Tenant details updated.",
+      property: formatProperty(updatedResult.rows[0]),
     });
   } catch (error) {
     console.error("Tenant update error:", error);
     return res.status(500).json({
-      message: "Could not update tenant details. Confirm the Supabase schema migration has been applied.",
+      message:
+        "Could not update tenant details. Confirm the Supabase schema migration has been applied.",
     });
   }
 });
 
-// PATCH /api/properties/:id/rent
+// PATCH /api/properties/:id/rent - update annual rent
 router.patch("/:id/rent", async (req, res) => {
   try {
     const { id } = req.params;
@@ -468,8 +486,7 @@ router.patch("/:id/rent", async (req, res) => {
     if (
       req.body?.annualRent === undefined ||
       req.body?.annualRent === null ||
-      (typeof req.body.annualRent === "string" &&
-        !req.body.annualRent.trim()) ||
+      (typeof req.body.annualRent === "string" && !req.body.annualRent.trim()) ||
       !Number.isFinite(rent) ||
       rent < 0
     ) {
@@ -478,23 +495,20 @@ router.patch("/:id/rent", async (req, res) => {
       });
     }
 
-    const { data, error } = await supabase
-      .from("properties")
-      .update({ annual_rent: rent, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .eq("company_id", company)
-      .select()
-      .maybeSingle();
+    const result = await db.query(
+      "UPDATE public.properties SET annual_rent = $1, updated_at = NOW() WHERE id = $2 AND company_id = $3 RETURNING *",
+      [rent, id, company]
+    );
 
-    if (error) throw error;
-
-    if (!data) {
-      return res.status(404).json({ message: "Unit not found for this company." });
+    if (result.rows.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "Unit not found for this company." });
     }
 
     return res.status(200).json({
       message: "Annual rent updated.",
-      property: formatProperty(data),
+      property: formatProperty(result.rows[0]),
     });
   } catch (error) {
     console.error("Rent update error:", error);
@@ -502,7 +516,7 @@ router.patch("/:id/rent", async (req, res) => {
   }
 });
 
-// PATCH /api/properties/:id/status
+// PATCH /api/properties/:id/status - update unit status
 router.patch("/:id/status", async (req, res) => {
   try {
     const { id } = req.params;
@@ -525,20 +539,22 @@ router.patch("/:id/status", async (req, res) => {
 
     await expireCompanyLeases(company);
 
-    const { data: current, error: readError } = await supabase
-      .from("properties")
-      .select("*")
-      .eq("id", id)
-      .eq("company_id", company)
-      .maybeSingle();
-
-    if (readError) throw readError;
+    const findResult = await db.query(
+      "SELECT * FROM public.properties WHERE id = $1 AND company_id = $2",
+      [id, company]
+    );
+    const current = findResult.rows[0];
 
     if (!current) {
-      return res.status(404).json({ message: "Unit not found for this company." });
+      return res
+        .status(404)
+        .json({ message: "Unit not found for this company." });
     }
 
-    if (status === "Occupied" && (!current.tenant_full_name || !current.tenant_phone)) {
+    if (
+      status === "Occupied" &&
+      (!current.tenant_full_name || !current.tenant_phone)
+    ) {
       return res.status(409).json({
         message: "Assign tenant details to make a flat Occupied.",
       });
@@ -550,21 +566,18 @@ router.patch("/:id/status", async (req, res) => {
       });
     }
 
-    const { data, error } = await supabase
-      .from("properties")
-      .update({
-        status,
-        vacant_since: status === "Vacant" ? new Date().toISOString() : null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-      .eq("company_id", company)
-      .select()
-      .single();
+    const updateSql = `
+      UPDATE public.properties
+      SET status = $1,
+          vacant_since = CASE WHEN $1 = 'Vacant' THEN NOW() ELSE NULL END,
+          updated_at = NOW()
+      WHERE id = $2 AND company_id = $3
+      RETURNING *
+    `;
 
-    if (error) throw error;
+    const result = await db.query(updateSql, [status, id, company]);
 
-    return res.status(200).json(formatProperty(data));
+    return res.status(200).json(formatProperty(result.rows[0]));
   } catch (error) {
     console.error("Update property status error:", error);
     return res.status(500).json({ message: "Could not update unit status." });
