@@ -24,7 +24,7 @@ const allowedOrigins = rawOrigins
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (such as mobile apps, curl, or server-to-server)
+      // Allow requests with no origin (such as curl, mobile apps, or server-to-server)
       if (
         !origin ||
         allowedOrigins.includes("*") ||
@@ -33,7 +33,10 @@ app.use(
         return callback(null, true);
       }
       // In development, allow localhost origins
-      if (process.env.NODE_ENV !== "production" && /^http:\/\/localhost:\d+$/.test(origin)) {
+      if (
+        process.env.NODE_ENV !== "production" &&
+        /^http:\/\/localhost:\d+$/.test(origin)
+      ) {
         return callback(null, true);
       }
       return callback(null, true);
@@ -68,13 +71,18 @@ app.get("/api/health", async (_req, res) => {
         status: "ok",
         database: "connected",
         databaseName: health.database,
+        diagnostics: health.diagnostics,
         timestamp: new Date().toISOString(),
       });
     }
     return res.status(503).json({
       status: "degraded",
       database: "disconnected",
-      message: health.message || health.error,
+      category: health.errorCategory,
+      summary: health.errorSummary,
+      detail: health.errorDetail,
+      advice: health.advice,
+      diagnostics: health.diagnostics,
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
@@ -83,6 +91,30 @@ app.get("/api/health", async (_req, res) => {
       message: err.message,
       timestamp: new Date().toISOString(),
     });
+  }
+});
+
+// Safe database diagnostic endpoint (no credentials or passwords exposed)
+app.get("/api/db-diagnostics", async (_req, res) => {
+  try {
+    const health = await db.checkHealth();
+    return res.json({
+      timestamp: new Date().toISOString(),
+      connected: health.connected,
+      status: health.connected ? "connected" : "disconnected",
+      diagnostics: health.diagnostics,
+      troubleshooting: health.connected
+        ? "Database connection is healthy and ready for queries."
+        : {
+            errorCategory: health.errorCategory,
+            summary: health.errorSummary,
+            detail: health.errorDetail,
+            recommendedAction: health.advice,
+            rawError: health.rawError,
+          },
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 
@@ -109,12 +141,18 @@ async function startServer() {
       `✓ Supabase PostgreSQL connected successfully (database: ${health.database})`
     );
   } else {
-    console.warn(
-      `⚠ Database connection notice: ${health.message || health.error}`
-    );
-    console.warn(
-      "Ensure DATABASE_URL is configured in your environment before processing real tenant queries."
-    );
+    console.warn("==========================================================");
+    console.warn(`⚠ Database connection notice: ${health.errorSummary || health.message}`);
+    if (health.errorCategory) {
+      console.warn(`  Category: ${health.errorCategory}`);
+      console.warn(`  Detail:   ${health.errorDetail}`);
+      console.warn(`  Advice:   ${health.advice}`);
+    }
+    if (health.diagnostics?.warnings?.length) {
+      console.warn("  Diagnostics Warnings:");
+      health.diagnostics.warnings.forEach((w) => console.warn(`   • ${w}`));
+    }
+    console.warn("==========================================================");
   }
 
   const server = app.listen(PORT, HOST, () => {

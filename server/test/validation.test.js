@@ -49,6 +49,16 @@ describe("PropertySE API & Validation Tests", () => {
     }
   });
 
+  test("GET /api/db-diagnostics should safely report diagnostics without leaking credentials", async () => {
+    const { status, data } = await request("/api/db-diagnostics");
+    assert.equal(status, 200);
+    assert.ok(data.timestamp);
+    assert.ok(typeof data.connected === "boolean");
+    assert.ok(data.diagnostics);
+    // Ensure no password field exists
+    assert.equal(data.diagnostics.password, undefined);
+  });
+
   test("POST /api/properties should reject invalid unit number (non-integer)", async () => {
     const { status, data } = await request("/api/properties", {
       method: "POST",
