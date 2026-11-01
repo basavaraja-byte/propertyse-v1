@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Environment secrets
+.env
+.env.*
+
+# Allow example environment files
+!.env.example
+
+# Build output
+dist/
+client/dist/
+server/dist/
+
+# Deployment & cache
+.firebase/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor and OS files
+.vscode/
+.DS_Store
+Thumbs.db
