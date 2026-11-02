@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-const API_BASE_URL = 'http://localhost:5000/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 const CATEGORIES = ['Plumbing', 'Electrical', 'Air Conditioning', 'Appliance', 'Cleaning', 'Structural', 'Other']
 const PRIORITIES = ['Low', 'Medium', 'High', 'Urgent']
 const TICKET_STATUSES = ['Open', 'In Progress', 'Resolved']

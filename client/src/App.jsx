@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
 import AddUnitModal from './components/unitmodel'
 import UnitTable from './components/UnitTable'
@@ -32,24 +32,9 @@ const EMPTY_FORM = {
 }
 
 function App() {
+  const [mountedAt] = useState(() => Date.now())
   const [companies, setCompanies] = useState(DEFAULT_COMPANIES)
   const [companyId, setCompanyId] = useState('COMP_001')
-  const [formCompanyId, setFormCompanyId] = useState('COMP_001')
-  const [properties, setProperties] = useState([])
-  const [activeSection, setActiveSection] = useState('overview')
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('All')
-  const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ ...EMPTY_FORM })
-  const [formError, setFormError] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [pageError, setPageError] = useState('')
-  const [notice, setNotice] = useState('')
-
-  const selectedCompany = companies.find(
-    (company) => company.id === companyId
-  )
 
   const loadCompanies = useCallback(async () => {
     try {
@@ -68,18 +53,27 @@ function App() {
       console.warn('Could not load companies; using default list.', error)
     }
   }, [])
+  const [formCompanyId, setFormCompanyId] = useState('COMP_001')
+  const [properties, setProperties] = useState([])
+  const [activeSection, setActiveSection] = useState('overview')
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({ ...EMPTY_FORM })
+  const [formError, setFormError] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [pageError, setPageError] = useState('')
+  const [notice, setNotice] = useState('')
 
-  useEffect(() => {
-    loadCompanies()
-  }, [loadCompanies])
+  const selectedCompany = companies.find(
+    (company) => company.id === companyId
+  )
 
-  const loadProperties = useCallback(async () => {
-    setLoading(true)
-    setPageError('')
-
+  const fetchPropertiesForCompany = useCallback(async (targetCompanyId) => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/properties?companyId=${encodeURIComponent(companyId)}`
+        `${API_BASE_URL}/properties?companyId=${encodeURIComponent(targetCompanyId)}`
       )
 
       const data = await response.json()
@@ -93,6 +87,7 @@ function App() {
       }
 
       setProperties(data)
+      setPageError('')
     } catch (error) {
       console.error('Load properties failed:', error)
       const rawMsg = error.message || 'Unknown network error'
@@ -103,11 +98,82 @@ function App() {
     } finally {
       setLoading(false)
     }
-  }, [companyId])
+  }, [])
+
+  const loadProperties = useCallback(() => {
+    setLoading(true)
+    setPageError('')
+    return fetchPropertiesForCompany(companyId)
+  }, [companyId, fetchPropertiesForCompany])
 
   useEffect(() => {
-    loadProperties()
-  }, [loadProperties])
+    let ignore = false
+    async function initCompanies() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/companies`)
+        const data = await response.json()
+
+        if (!ignore && response.ok && Array.isArray(data) && data.length) {
+          setCompanies(data)
+          setCompanyId((current) =>
+            data.some((company) => company.id === current)
+              ? current
+              : data[0].id
+          )
+        }
+      } catch (error) {
+        console.warn('Could not load companies; using default list.', error)
+      }
+    }
+
+    initCompanies()
+    return () => {
+      ignore = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let ignore = false
+    async function load() {
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/properties?companyId=${encodeURIComponent(companyId)}`
+        )
+
+        const data = await response.json()
+
+        if (ignore) return
+
+        if (!response.ok) {
+          throw new Error(data.message || `Request failed (${response.status})`)
+        }
+
+        if (!Array.isArray(data)) {
+          throw new Error('Unexpected response from the properties API.')
+        }
+
+        setProperties(data)
+        setPageError('')
+      } catch (error) {
+        if (ignore) return
+        console.error('Load properties failed:', error)
+        const rawMsg = error.message || 'Unknown network error'
+        const friendlyMsg = rawMsg.toLowerCase().includes('backend')
+          ? rawMsg
+          : `${rawMsg}. Verify that the backend is running and database is reachable.`
+        setPageError(`Could not load properties: ${friendlyMsg}`)
+      } finally {
+        if (!ignore) {
+          setLoading(false)
+        }
+      }
+    }
+
+    load()
+    return () => {
+      ignore = true
+    }
+  }, [companyId])
 
   const total = properties.length
   const vacant = properties.filter((property) => property.status === 'Vacant').length
@@ -116,52 +182,53 @@ function App() {
     (property) => property.status === 'Maintenance'
   ).length
 
-  const vacantProperties = properties.filter(
-    (property) => property.status === 'Vacant'
-  )
+  const topVacancyRecommendation = useMemo(() => {
+    const now = mountedAt
+    const vacantProperties = properties.filter(
+      (property) => property.status === 'Vacant'
+    )
 
-  const getVacancyDays = (property) => {
-    if (!property.vacantSince) return 0
+    const ranked = vacantProperties
+      .map((property) => {
+        let daysVacant = 0
+        if (property.vacantSince) {
+          const start = new Date(property.vacantSince).getTime()
+          if (Number.isFinite(start)) {
+            daysVacant = Math.max(0, Math.floor((now - start) / 86400000))
+          }
+        }
 
-    const start = new Date(property.vacantSince).getTime()
-    if (!Number.isFinite(start)) return 0
+        const monthlyRent = Math.max(0, Number(property.annualRent || 0) / 12)
+        const repairCost = Math.max(
+          0,
+          Number(property.estimatedRepairCost || 0)
+        )
+        const estimatedDaysToRent = Math.max(
+          0,
+          Number(property.estimatedDaysToRent ?? 30)
+        )
+        const tenantReady = Boolean(property.tenantReady)
 
-    return Math.max(0, Math.floor((Date.now() - start) / 86400000))
-  }
+        const score =
+          (tenantReady ? 40 : 0) +
+          Math.min(daysVacant, 60) * 0.5 +
+          Math.min(monthlyRent / 1000, 30) -
+          Math.min(repairCost / 1000, 40) -
+          Math.min(estimatedDaysToRent, 60) * 0.25
 
-  const rankedVacancies = vacantProperties
-    .map((property) => {
-      const daysVacant = getVacancyDays(property)
-      const monthlyRent = Math.max(0, Number(property.annualRent || 0) / 12)
-      const repairCost = Math.max(
-        0,
-        Number(property.estimatedRepairCost || 0)
-      )
-      const estimatedDaysToRent = Math.max(
-        0,
-        Number(property.estimatedDaysToRent ?? 30)
-      )
-      const tenantReady = Boolean(property.tenantReady)
+        return {
+          ...property,
+          daysVacant,
+          monthlyRent,
+          repairCost,
+          tenantReady,
+          score,
+        }
+      })
+      .sort((a, b) => b.score - a.score)
 
-      const score =
-        (tenantReady ? 40 : 0) +
-        Math.min(daysVacant, 60) * 0.5 +
-        Math.min(monthlyRent / 1000, 30) -
-        Math.min(repairCost / 1000, 40) -
-        Math.min(estimatedDaysToRent, 60) * 0.25
-
-      return {
-        ...property,
-        daysVacant,
-        monthlyRent,
-        repairCost,
-        tenantReady,
-        score,
-      }
-    })
-    .sort((a, b) => b.score - a.score)
-
-  const topVacancyRecommendation = rankedVacancies[0] || null
+    return ranked[0] || null
+  }, [properties, mountedAt])
 
   const filteredProperties = properties.filter((property) => {
     const query = search.trim().toLowerCase()

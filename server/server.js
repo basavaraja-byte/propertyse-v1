@@ -12,36 +12,56 @@ const PORT = process.env.PORT || 5000;
 const HOST = "0.0.0.0";
 
 // Configure CORS
-const rawOrigins =
-  process.env.CORS_ORIGINS ||
-  "http://localhost:5173,https://propertyse-v1.web.app,https://propertyse-v1.firebaseapp.com";
+const isProduction = process.env.NODE_ENV === "production";
+const defaultOrigins = [
+  "https://propertyse-v1.web.app",
+  "https://propertyse-v1.firebaseapp.com",
+];
 
-const allowedOrigins = rawOrigins
+const configuredOrigins = (process.env.CORS_ORIGINS || "")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
 
+// Filter out wildcard '*' in production to prevent arbitrary origins with credentials
+const allowedOrigins = Array.from(
+  new Set([
+    ...defaultOrigins,
+    ...configuredOrigins.filter((o) => !isProduction || o !== "*"),
+  ])
+);
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (such as curl, mobile apps, or server-to-server)
+      // Allow requests with no origin (such as curl, mobile apps, or server-to-server health checks)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      // Explicitly allow configured production origins
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Outside of production, allow local development origins
       if (
-        !origin ||
-        allowedOrigins.includes("*") ||
-        allowedOrigins.includes(origin)
+        !isProduction &&
+        (/^http:\/\/localhost(:\d+)?$/.test(origin) ||
+          /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin))
       ) {
         return callback(null, true);
       }
-      // In development, allow localhost origins
-      if (
-        process.env.NODE_ENV !== "production" &&
-        /^http:\/\/localhost:\d+$/.test(origin)
-      ) {
-        return callback(null, true);
-      }
-      return callback(null, true);
+
+      // Reject all unauthorized origins
+      const corsError = new Error(`CORS policy violation: Origin '${origin}' is not allowed.`);
+      corsError.status = 403;
+      return callback(corsError, false);
     },
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
     credentials: true,
+    optionsSuccessStatus: 204,
   })
 );
 
@@ -98,7 +118,7 @@ app.get("/api/health", async (_req, res) => {
 app.get("/api/db-diagnostics", async (_req, res) => {
   try {
     const health = await db.checkHealth();
-    return res.json({
+    return res.status(200).json({
       timestamp: new Date().toISOString(),
       connected: health.connected,
       status: health.connected ? "connected" : "disconnected",
@@ -110,11 +130,14 @@ app.get("/api/db-diagnostics", async (_req, res) => {
             summary: health.errorSummary,
             detail: health.errorDetail,
             recommendedAction: health.advice,
-            rawError: health.rawError,
+            rawError: !isProduction ? health.rawError : undefined,
           },
     });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({
+      status: "error",
+      message: isProduction ? "Database diagnostic query failed." : err.message,
+    });
   }
 });
 
@@ -125,10 +148,17 @@ app.use((_req, res) => {
 
 // Centralized error handler
 app.use((err, _req, res, _next) => {
+  if (err.message && err.message.includes("CORS")) {
+    return res.status(403).json({
+      status: "error",
+      message: err.message,
+    });
+  }
+
   console.error("Unhandled server error:", err);
   res.status(500).json({
     message: "Internal server error.",
-    error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    error: !isProduction ? err.message : undefined,
   });
 });
 
@@ -158,6 +188,19 @@ async function startServer() {
   const server = app.listen(PORT, HOST, () => {
     console.log(`PropertySE API listening on http://${HOST}:${PORT}`);
   });
+
+  const shutdown = async (signal) => {
+    console.log(`Received ${signal}. Shutting down gracefully...`);
+    server.close(async () => {
+      console.log("HTTP server closed.");
+      await db.closePool();
+      console.log("PostgreSQL connection pool closed.");
+      process.exit(0);
+    });
+  };
+
+  process.once("SIGTERM", () => shutdown("SIGTERM"));
+  process.once("SIGINT", () => shutdown("SIGINT"));
 
   return server;
 }

@@ -23,7 +23,7 @@ const requiresSsl = Boolean(
 );
 
 const connectionTimeoutMs = parseInt(
-  process.env.PG_CONNECTION_TIMEOUT_MS || "15000",
+  process.env.PG_CONNECTION_TIMEOUT_MS || "10000",
   10
 );
 
@@ -246,7 +246,8 @@ async function getClient() {
 }
 
 /**
- * Check the database connection health and return structured diagnostics.
+ * Check the database connection health by executing a live query.
+ * Requires SELECT NOW(), current_database() to succeed.
  */
 async function checkHealth() {
   const safeDetails = getSafeConnectionDetails();
@@ -261,13 +262,25 @@ async function checkHealth() {
 
   try {
     const result = await pool.query(
-      "SELECT 1 AS health, current_database() AS db, version() AS version"
+      "SELECT NOW() AS now, current_database() AS database_name, version() AS version;"
     );
+    const row = result.rows[0];
+    const isLive = Boolean(row && row.now && row.database_name);
+
+    if (!isLive) {
+      return {
+        connected: false,
+        errorCategory: "DATABASE_ERROR",
+        errorSummary: "Database did not return expected response",
+        diagnostics: safeDetails,
+      };
+    }
+
     return {
       connected: true,
-      database: result.rows[0]?.db,
-      version: result.rows[0]?.version,
-      healthy: result.rows[0]?.health === 1,
+      database: row.database_name,
+      now: row.now,
+      version: row.version,
       diagnostics: safeDetails,
     };
   } catch (error) {
@@ -285,36 +298,49 @@ async function checkHealth() {
 }
 
 /**
- * Format a database error for HTTP responses, ensuring real errors are not hidden.
+ * Format a database error for HTTP responses.
+ * Sanitizes errors in production while preserving operational categories.
  */
 function formatDbError(actionDescription, error) {
   const classified = categorizeDbError(error);
+  const isProd = process.env.NODE_ENV === "production";
+
+  let clientMessage = `Failed to ${actionDescription}.`;
   if (classified.category === "TIMEOUT") {
-    return {
-      message: `Database connection timed out while attempting to ${actionDescription}. Ensure DATABASE_URL on Render uses the Supabase Session Pooler (aws-0-[region].pooler.supabase.com:5432).`,
-      error: error.message,
-      category: classified.category,
-    };
+    clientMessage = `Database connection timed out while attempting to ${actionDescription}. Ensure the backend uses the Supabase Session Pooler.`;
+  } else if (classified.category === "AUTHENTICATION") {
+    clientMessage = `Database authentication failed while attempting to ${actionDescription}.`;
+  } else if (classified.category === "DNS") {
+    clientMessage = `Database host resolution failed while attempting to ${actionDescription}.`;
+  } else if (classified.category === "NETWORK") {
+    clientMessage = `Database network connection failed while attempting to ${actionDescription}.`;
+  } else if (classified.summary) {
+    clientMessage = `Could not ${actionDescription}.`;
   }
-  if (classified.category === "AUTHENTICATION") {
-    return {
-      message: `Database authentication failed while attempting to ${actionDescription}. Check username/password in DATABASE_URL.`,
-      error: error.message,
-      category: classified.category,
-    };
-  }
-  if (classified.category === "DNS") {
-    return {
-      message: `Database host resolution failed while attempting to ${actionDescription}. Check hostname in DATABASE_URL.`,
-      error: error.message,
-      category: classified.category,
-    };
-  }
-  return {
-    message: `Failed to ${actionDescription}: ${error.message || "An unexpected database error occurred."}`,
-    error: error.message,
+
+  const responsePayload = {
+    message: clientMessage,
     category: classified.category,
   };
+
+  // Only expose technical detail/raw message in non-production environments
+  if (!isProd) {
+    responsePayload.detail = classified.detail || error?.message;
+    responsePayload.error = error?.message;
+  }
+
+  return responsePayload;
+}
+
+/**
+ * Gracefully close the PostgreSQL connection pool.
+ */
+async function closePool() {
+  try {
+    await pool.end();
+  } catch (err) {
+    console.error("Error closing PostgreSQL pool:", err.message);
+  }
 }
 
 module.exports = {
@@ -322,6 +348,7 @@ module.exports = {
   query,
   getClient,
   checkHealth,
+  closePool,
   getSafeConnectionDetails,
   categorizeDbError,
   formatDbError,

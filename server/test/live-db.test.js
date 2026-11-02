@@ -77,6 +77,15 @@ describe("Live Supabase PostgreSQL Integration Tests", () => {
     assert.ok(sample.tenant);
   });
 
+  test("GET /api/properties/:id returns single property by ID", async () => {
+    const listRes = await request("/api/properties?companyId=COMP_001");
+    const sampleId = listRes.data[0].id;
+    const { status, data } = await request(`/api/properties/${sampleId}?companyId=COMP_001`);
+    assert.equal(status, 200);
+    assert.equal(data.id, sampleId);
+    assert.equal(data.companyId, "COMP_001");
+  });
+
   test("GET /api/maintenance-tickets?companyId=COMP_001 returns tickets", async () => {
     const { status, data } = await request("/api/maintenance-tickets?companyId=COMP_001");
     assert.equal(status, 200);
@@ -84,3 +93,4 @@ describe("Live Supabase PostgreSQL Integration Tests", () => {
     assert.ok(Array.isArray(data.tickets));
   });
 });
+

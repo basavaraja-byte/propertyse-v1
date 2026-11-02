@@ -160,6 +160,39 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET /api/properties/:id - retrieve a single unit by ID
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const company = normalizeCompanyId(req.query.companyId);
+
+    if (!isUuid(id)) {
+      return res.status(400).json({ message: "Invalid unit ID." });
+    }
+
+    let queryText = "SELECT * FROM public.properties WHERE id = $1";
+    const queryParams = [id];
+
+    if (company) {
+      if (!isAllowedCompany(company)) {
+        return res.status(400).json({ message: "Invalid company ID." });
+      }
+      queryText += " AND company_id = $2";
+      queryParams.push(company);
+    }
+
+    const result = await db.query(queryText, queryParams);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Unit not found." });
+    }
+
+    return res.status(200).json(formatProperty(result.rows[0]));
+  } catch (error) {
+    console.error("Get property error:", error);
+    return res.status(500).json(db.formatDbError("load property", error));
+  }
+});
+
 // POST /api/properties - create one unit at a time
 router.post("/", async (req, res) => {
   try {
