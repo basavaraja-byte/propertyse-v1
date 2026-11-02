@@ -91,6 +91,7 @@ app.get("/api/health", async (_req, res) => {
         status: "ok",
         database: "connected",
         databaseName: health.database,
+        databaseUser: health.user,
         diagnostics: health.diagnostics,
         timestamp: new Date().toISOString(),
       });
@@ -125,7 +126,11 @@ app.get("/api/db-diagnostics", async (_req, res) => {
       status: health.connected ? "connected" : "disconnected",
       diagnostics: health.diagnostics,
       troubleshooting: health.connected
-        ? "Database connection is healthy and ready for queries."
+        ? {
+            message: "Database connection is healthy and ready for queries.",
+            database: health.database,
+            user: health.user,
+          }
         : {
             errorCategory: health.errorCategory,
             summary: health.errorSummary,
