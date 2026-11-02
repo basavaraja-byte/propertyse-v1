@@ -44,8 +44,8 @@ function formatTicket(row) {
 // GET /api/maintenance-tickets - retrieve tickets for a specific company
 router.get("/", async (req, res) => {
   try {
-    const company =
-      typeof req.query.companyId === "string" ? req.query.companyId.trim() : "";
+    const rawCompany = req.query.companyId ?? req.query.company_id;
+    const company = typeof rawCompany === "string" ? rawCompany.trim() : "";
     if (!allowed(company)) {
       return res
         .status(400)
@@ -78,7 +78,8 @@ router.post("/", async (req, res) => {
       priority = "Medium",
     } = req.body || {};
 
-    const company = typeof companyId === "string" ? companyId.trim() : "";
+    const rawCompany = companyId ?? req.body?.company_id ?? req.query?.companyId ?? req.query?.company_id;
+    const company = typeof rawCompany === "string" ? rawCompany.trim() : "";
     if (!allowed(company)) {
       return res
         .status(400)
@@ -178,12 +179,12 @@ router.post("/", async (req, res) => {
 router.patch("/:id/status", async (req, res) => {
   try {
     const { id } = req.params;
-    const company =
-      typeof req.body?.companyId === "string"
-        ? req.body.companyId.trim()
-        : typeof req.query.companyId === "string"
-        ? req.query.companyId.trim()
-        : "";
+    const rawCompany =
+      req.body?.companyId ??
+      req.body?.company_id ??
+      req.query?.companyId ??
+      req.query?.company_id;
+    const company = typeof rawCompany === "string" ? rawCompany.trim() : "";
     const { status } = req.body || {};
 
     if (!allowed(company)) {

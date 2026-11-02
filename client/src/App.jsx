@@ -76,7 +76,12 @@ function App() {
         `${API_BASE_URL}/properties?companyId=${encodeURIComponent(targetCompanyId)}`
       )
 
-      const data = await response.json()
+      let data = {}
+      try {
+        data = await response.json()
+      } catch {
+        data = { message: `Server returned HTTP ${response.status}` }
+      }
 
       if (!response.ok) {
         throw new Error(data.message || `Request failed (${response.status})`)
@@ -111,7 +116,12 @@ function App() {
     async function initCompanies() {
       try {
         const response = await fetch(`${API_BASE_URL}/companies`)
-        const data = await response.json()
+        let data = []
+        try {
+          data = await response.json()
+        } catch {
+          data = []
+        }
 
         if (!ignore && response.ok && Array.isArray(data) && data.length) {
           setCompanies(data)
@@ -140,7 +150,12 @@ function App() {
           `${API_BASE_URL}/properties?companyId=${encodeURIComponent(companyId)}`
         )
 
-        const data = await response.json()
+        let data = {}
+        try {
+          data = await response.json()
+        } catch {
+          data = { message: `Server returned HTTP ${response.status}` }
+        }
 
         if (ignore) return
 

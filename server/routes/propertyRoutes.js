@@ -131,7 +131,7 @@ async function expireCompanyLeases(company) {
 // GET /api/properties?companyId=COMP_001
 router.get("/", async (req, res) => {
   try {
-    const company = normalizeCompanyId(req.query.companyId);
+    const company = normalizeCompanyId(req.query.companyId || req.query.company_id);
 
     if (!isAllowedCompany(company)) {
       return res.status(400).json({
@@ -164,7 +164,7 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const company = normalizeCompanyId(req.query.companyId);
+    const company = normalizeCompanyId(req.query.companyId || req.query.company_id);
 
     if (!isUuid(id)) {
       return res.status(400).json({ message: "Invalid unit ID." });
@@ -208,7 +208,7 @@ router.post("/", async (req, res) => {
       estimatedDaysToRent = 30,
     } = req.body || {};
 
-    const company = normalizeCompanyId(companyId);
+    const company = normalizeCompanyId(companyId || req.body?.company_id);
 
     if (!isAllowedCompany(company)) {
       return res.status(400).json({ message: "Invalid company ID." });
@@ -333,7 +333,7 @@ router.patch("/:id/tenant", async (req, res) => {
   try {
     const { id } = req.params;
     const company = normalizeCompanyId(
-      req.query.companyId || req.body?.companyId
+      req.query.companyId || req.query.company_id || req.body?.companyId || req.body?.company_id
     );
     const action = req.body?.action || "update";
 
@@ -512,7 +512,7 @@ router.patch("/:id/rent", async (req, res) => {
   try {
     const { id } = req.params;
     const company = normalizeCompanyId(
-      req.query.companyId || req.body?.companyId
+      req.query.companyId || req.query.company_id || req.body?.companyId || req.body?.company_id
     );
     const rent = Number(req.body?.annualRent);
 
@@ -562,7 +562,7 @@ router.patch("/:id/status", async (req, res) => {
   try {
     const { id } = req.params;
     const company = normalizeCompanyId(
-      req.query.companyId || req.body?.companyId
+      req.query.companyId || req.query.company_id || req.body?.companyId || req.body?.company_id
     );
     const { status } = req.body || {};
 
