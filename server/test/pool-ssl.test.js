@@ -17,12 +17,25 @@ describe("PostgreSQL Pool SSL & Configuration Tests", () => {
     );
   });
 
-  test("Pool does not carry unparsed connectionString that could override SSL options", () => {
-    assert.equal(
-      db.pool.options.connectionString,
-      undefined,
-      "connectionString should be undefined so pg ConnectionParameters does not re-parse and clobber SSL"
-    );
+  test("Pool connectionString does not contain conflicting SSL query parameters", () => {
+    if (db.pool.options.connectionString) {
+      assert.ok(
+        !db.pool.options.connectionString.includes("sslmode="),
+        "connectionString must not contain sslmode query parameter"
+      );
+      assert.ok(
+        !db.pool.options.connectionString.includes("sslcert="),
+        "connectionString must not contain sslcert query parameter"
+      );
+      assert.ok(
+        !db.pool.options.connectionString.includes("sslkey="),
+        "connectionString must not contain sslkey query parameter"
+      );
+      assert.ok(
+        !db.pool.options.connectionString.includes("sslrootcert="),
+        "connectionString must not contain sslrootcert query parameter"
+      );
+    }
   });
 
   test("Client instantiated from Pool preserves rejectUnauthorized: false at runtime", () => {
@@ -43,3 +56,4 @@ describe("PostgreSQL Pool SSL & Configuration Tests", () => {
     }
   });
 });
+

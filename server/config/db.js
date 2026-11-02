@@ -45,28 +45,50 @@ const connectionTimeoutMs = parseInt(
  * Security note: TLS encryption (TLSv1.3 / AES-GCM) is fully active and enforced.
  * Only self-signed / intermediate certificate validation in the pooler chain is bypassed.
  */
+// Properly parse the connection parameters and prevent ?sslmode= from clobbering ssl options
 let poolConfig = {
   max: parseInt(process.env.PG_MAX_CONNECTIONS || "10", 10),
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: connectionTimeoutMs,
 };
 
-if (rawConnectionString) {
-  // Strip ?sslmode=... from the URL string before parsing
-  const cleanUrl = rawConnectionString
-    .replace(/([?&])sslmode=[^&]+(&|$)/g, "$1")
-    .replace(/[?&]$/, "");
+let cleanConnectionString = rawConnectionString;
 
-  const parsedParams = parse(cleanUrl);
+if (rawConnectionString) {
+  try {
+    const urlObj = new URL(rawConnectionString);
+    urlObj.searchParams.delete("sslmode");
+    urlObj.searchParams.delete("sslcert");
+    urlObj.searchParams.delete("sslkey");
+    urlObj.searchParams.delete("sslrootcert");
+    cleanConnectionString = urlObj.toString();
+  } catch (_urlErr) {
+    cleanConnectionString = rawConnectionString
+      .replace(/([?&])(sslmode|sslcert|sslkey|sslrootcert)=[^&]+(&|$)/g, "$1")
+      .replace(/[?&]$/, "");
+  }
+
+  const parsedParams = parse(cleanConnectionString);
   delete parsedParams.ssl;
   delete parsedParams.sslmode;
+  delete parsedParams.sslcert;
+  delete parsedParams.sslkey;
+  delete parsedParams.sslrootcert;
 
   poolConfig = {
     ...poolConfig,
     ...parsedParams,
+    connectionString: cleanConnectionString,
   };
 
   if (requiresSsl) {
+    /**
+     * TLS configuration for Supabase:
+     * rejectUnauthorized: false is required because the Supabase Session Pooler
+     * serves an intermediate certificate chain managed by AWS/Supabase that is not
+     * bundled in standard root CA stores. TLS encryption is fully active (AES-GCM / TLS 1.3),
+     * but host certificate chain verification is bypassed.
+     */
     poolConfig.ssl = { rejectUnauthorized: false };
   }
 }
@@ -234,6 +256,9 @@ function getSafeConnectionDetails() {
       database,
       sslConfigured: requiresSsl,
       sslMode,
+      tlsEnabled: Boolean(poolConfig.ssl),
+      rejectUnauthorized: poolConfig.ssl ? poolConfig.ssl.rejectUnauthorized : true,
+      effectiveConnectionMode: poolConfig.ssl ? "tls_compatibility_pooler" : "plaintext",
       poolMax: poolConfig.max,
       connectionTimeoutMs,
       hasProjectInUsername: hasProjectInUser,
