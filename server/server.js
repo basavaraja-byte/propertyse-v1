@@ -106,9 +106,10 @@ app.get("/api/health", async (_req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
+    console.error("Health check error:", err);
     return res.status(500).json({
       status: "error",
-      message: err.message,
+      message: isProduction ? "Health check evaluation failed." : err.message,
       timestamp: new Date().toISOString(),
     });
   }

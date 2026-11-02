@@ -285,15 +285,22 @@ async function checkHealth() {
     };
   } catch (error) {
     const classified = categorizeDbError(error);
-    return {
+    const isProd = process.env.NODE_ENV === "production";
+    const healthResult = {
       connected: false,
       errorCategory: classified.category,
       errorSummary: classified.summary,
       errorDetail: classified.detail,
       advice: classified.advice,
-      rawError: error.message,
       diagnostics: safeDetails,
     };
+
+    // Never expose raw database errors, SQL, or internal messages in production
+    if (!isProd) {
+      healthResult.rawError = error.message;
+    }
+
+    return healthResult;
   }
 }
 
