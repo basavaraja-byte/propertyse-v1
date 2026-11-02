@@ -284,6 +284,39 @@ async function checkHealth() {
   }
 }
 
+/**
+ * Format a database error for HTTP responses, ensuring real errors are not hidden.
+ */
+function formatDbError(actionDescription, error) {
+  const classified = categorizeDbError(error);
+  if (classified.category === "TIMEOUT") {
+    return {
+      message: `Database connection timed out while attempting to ${actionDescription}. Ensure DATABASE_URL on Render uses the Supabase Session Pooler (aws-0-[region].pooler.supabase.com:5432).`,
+      error: error.message,
+      category: classified.category,
+    };
+  }
+  if (classified.category === "AUTHENTICATION") {
+    return {
+      message: `Database authentication failed while attempting to ${actionDescription}. Check username/password in DATABASE_URL.`,
+      error: error.message,
+      category: classified.category,
+    };
+  }
+  if (classified.category === "DNS") {
+    return {
+      message: `Database host resolution failed while attempting to ${actionDescription}. Check hostname in DATABASE_URL.`,
+      error: error.message,
+      category: classified.category,
+    };
+  }
+  return {
+    message: `Failed to ${actionDescription}: ${error.message || "An unexpected database error occurred."}`,
+    error: error.message,
+    category: classified.category,
+  };
+}
+
 module.exports = {
   pool,
   query,
@@ -291,4 +324,5 @@ module.exports = {
   checkHealth,
   getSafeConnectionDetails,
   categorizeDbError,
+  formatDbError,
 };

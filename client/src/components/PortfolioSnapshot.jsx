@@ -9,6 +9,7 @@ function formatCurrency(value) {
 
 export default function PortfolioSnapshot({
   loading,
+  hasError = false,
   total,
   vacant,
   occupied,
@@ -16,7 +17,8 @@ export default function PortfolioSnapshot({
   topVacancyRecommendation,
   onViewUnits,
 }) {
-  const capacityPercentage = Math.min(total / 10, 1) * 100
+  const MAX_UNITS = 20
+  const capacityPercentage = hasError ? 0 : Math.min(total / MAX_UNITS, 1) * 100
 
   return (
     <article className="panel portfolio-panel">
@@ -38,7 +40,7 @@ export default function PortfolioSnapshot({
       <div className="occupancy-total">
         <div>
           <span className="muted-label">Registered units</span>
-          <strong>{loading ? '—' : total}</strong>
+          <strong>{loading || hasError ? '—' : total}</strong>
         </div>
         <span className="occupancy-caption">Current status</span>
       </div>
@@ -83,7 +85,7 @@ export default function PortfolioSnapshot({
                 color: '#172033',
               }}
             >
-              {loading ? '—' : total}
+              {loading || hasError ? '—' : total}
               <span
                 style={{
                   color: '#98A2B3',
@@ -91,7 +93,7 @@ export default function PortfolioSnapshot({
                   fontWeight: 500,
                 }}
               >
-                {' '}/ 10
+                {` / ${MAX_UNITS}`}
               </span>
             </strong>
             <span className="muted-label">units registered</span>
@@ -129,9 +131,11 @@ export default function PortfolioSnapshot({
           <span>
             {loading
               ? 'Loading units…'
-              : `${Math.max(0, 10 - total)} spaces remaining`}
+              : hasError
+              ? 'Unable to load capacity'
+              : `${Math.max(0, MAX_UNITS - total)} spaces remaining`}
           </span>
-          <span>10-unit maximum</span>
+          <span>{MAX_UNITS}-unit maximum</span>
         </div>
       </div>
 

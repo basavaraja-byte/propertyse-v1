@@ -63,10 +63,7 @@ router.get("/", async (req, res) => {
     });
   } catch (error) {
     console.error("Get maintenance tickets error:", error);
-    return res.status(500).json({
-      message:
-        "Could not load maintenance tickets. Confirm the Supabase migration has been applied.",
-    });
+    return res.status(500).json(db.formatDbError("load maintenance tickets", error));
   }
 });
 
@@ -173,9 +170,7 @@ router.post("/", async (req, res) => {
     }
   } catch (error) {
     console.error("Create maintenance ticket error:", error);
-    return res
-      .status(500)
-      .json({ message: "Could not submit maintenance ticket." });
+    return res.status(500).json(db.formatDbError("submit maintenance ticket", error));
   }
 });
 
@@ -281,9 +276,7 @@ router.patch("/:id/status", async (req, res) => {
     }
   } catch (error) {
     console.error("Update maintenance ticket error:", error);
-    return res
-      .status(500)
-      .json({ message: "Could not update maintenance ticket status." });
+    return res.status(500).json(db.formatDbError("update maintenance ticket status", error));
   }
 });
 

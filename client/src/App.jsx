@@ -95,9 +95,11 @@ function App() {
       setProperties(data)
     } catch (error) {
       console.error('Load properties failed:', error)
-      setPageError(
-        `Could not load properties: ${error.message}. Check that the backend is running and allows requests from this frontend.`
-      )
+      const rawMsg = error.message || 'Unknown network error'
+      const friendlyMsg = rawMsg.toLowerCase().includes('backend')
+        ? rawMsg
+        : `${rawMsg}. Verify that the backend is running and database is reachable.`
+      setPageError(`Could not load properties: ${friendlyMsg}`)
     } finally {
       setLoading(false)
     }
@@ -447,12 +449,12 @@ function App() {
                     </div>
 
                     <div className="stat-value">
-                      {loading ? '—' : stat.value}
+                      {loading ? '—' : pageError ? '—' : stat.value}
                     </div>
 
                     <div className="stat-detail">
                       <span className={`mini-dot ${stat.tone}`} />
-                      {stat.detail}
+                      {pageError ? 'Unable to load data' : stat.detail}
                     </div>
                   </article>
                 ))}
@@ -462,6 +464,7 @@ function App() {
                 <section className="overview-grid">
                   <PortfolioSnapshot
                     loading={loading}
+                    hasError={Boolean(pageError)}
                     total={total}
                     vacant={vacant}
                     occupied={occupied}
@@ -524,6 +527,8 @@ function App() {
                 properties={properties}
                 filteredProperties={filteredProperties}
                 loading={loading}
+                hasError={Boolean(pageError)}
+                onRetry={loadProperties}
                 search={search}
                 setSearch={setSearch}
                 statusFilter={statusFilter}

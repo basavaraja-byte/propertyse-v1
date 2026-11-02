@@ -15,10 +15,7 @@ router.get("/", async (_req, res) => {
     return res.status(200).json(result.rows.map((c) => ({ id: c.id, name: c.name })));
   } catch (error) {
     console.error("List companies error:", error);
-    return res.status(500).json({
-      message:
-        "Could not load companies. Confirm public.companies table exists with id and name columns.",
-    });
+    return res.status(500).json(db.formatDbError("load companies", error));
   }
 });
 
@@ -46,10 +43,7 @@ router.post("/", async (req, res) => {
     if (error.code === "23505") {
       return res.status(409).json({ message: "That company ID already exists." });
     }
-    return res.status(500).json({
-      message:
-        "Could not add company. Check the companies table schema and related property foreign keys.",
-    });
+    return res.status(500).json(db.formatDbError("add company", error));
   }
 });
 
@@ -87,7 +81,7 @@ router.delete("/:id", async (req, res) => {
     return res.status(200).json({ message: "Company removed." });
   } catch (error) {
     console.error("Delete company error:", error);
-    return res.status(500).json({ message: "Could not remove company." });
+    return res.status(500).json(db.formatDbError("remove company", error));
   }
 });
 

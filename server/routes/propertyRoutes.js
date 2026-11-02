@@ -139,7 +139,14 @@ router.get("/", async (req, res) => {
       });
     }
 
-    await expireCompanyLeases(company);
+    try {
+      await expireCompanyLeases(company);
+    } catch (expireError) {
+      console.warn(
+        "Notice: lease expiry background sweep failed, proceeding to load properties:",
+        expireError.message
+      );
+    }
 
     const result = await db.query(
       "SELECT * FROM public.properties WHERE company_id = $1 ORDER BY created_at DESC",
@@ -149,10 +156,7 @@ router.get("/", async (req, res) => {
     return res.status(200).json(result.rows.map(formatProperty));
   } catch (error) {
     console.error("Get properties error:", error);
-    return res.status(500).json({
-      message:
-        "Could not load properties. Check the Supabase schema and maintenance_tickets table.",
-    });
+    return res.status(500).json(db.formatDbError("load properties", error));
   }
 });
 
@@ -287,7 +291,7 @@ router.post("/", async (req, res) => {
         message: "This unit already exists for this company.",
       });
     }
-    return res.status(500).json({ message: "Could not create the unit." });
+    return res.status(500).json(db.formatDbError("create unit", error));
   }
 });
 
@@ -314,7 +318,14 @@ router.patch("/:id/tenant", async (req, res) => {
       });
     }
 
-    await expireCompanyLeases(company);
+    try {
+      await expireCompanyLeases(company);
+    } catch (expireError) {
+      console.warn(
+        "Notice: lease expiry background sweep failed, proceeding to load properties:",
+        expireError.message
+      );
+    }
 
     const findResult = await db.query(
       "SELECT * FROM public.properties WHERE id = $1 AND company_id = $2",
@@ -459,10 +470,7 @@ router.patch("/:id/tenant", async (req, res) => {
     });
   } catch (error) {
     console.error("Tenant update error:", error);
-    return res.status(500).json({
-      message:
-        "Could not update tenant details. Confirm the Supabase schema migration has been applied.",
-    });
+    return res.status(500).json(db.formatDbError("update tenant details", error));
   }
 });
 
@@ -512,7 +520,7 @@ router.patch("/:id/rent", async (req, res) => {
     });
   } catch (error) {
     console.error("Rent update error:", error);
-    return res.status(500).json({ message: "Could not update annual rent." });
+    return res.status(500).json(db.formatDbError("update annual rent", error));
   }
 });
 
@@ -537,7 +545,14 @@ router.patch("/:id/status", async (req, res) => {
       return res.status(400).json({ message: "Invalid unit status." });
     }
 
-    await expireCompanyLeases(company);
+    try {
+      await expireCompanyLeases(company);
+    } catch (expireError) {
+      console.warn(
+        "Notice: lease expiry background sweep failed, proceeding to load properties:",
+        expireError.message
+      );
+    }
 
     const findResult = await db.query(
       "SELECT * FROM public.properties WHERE id = $1 AND company_id = $2",
@@ -580,7 +595,7 @@ router.patch("/:id/status", async (req, res) => {
     return res.status(200).json(formatProperty(result.rows[0]));
   } catch (error) {
     console.error("Update property status error:", error);
-    return res.status(500).json({ message: "Could not update unit status." });
+    return res.status(500).json(db.formatDbError("update unit status", error));
   }
 });
 

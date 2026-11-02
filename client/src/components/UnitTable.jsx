@@ -11,6 +11,8 @@ export default function UnitTable({
   properties,
   filteredProperties,
   loading,
+  hasError = false,
+  onRetry,
   search,
   setSearch,
   statusFilter,
@@ -102,6 +104,24 @@ export default function UnitTable({
                 <td colSpan="5" className="table-message">
                   <span className="loading-spinner" />
                   Loading property records...
+                </td>
+              </tr>
+            ) : hasError ? (
+              <tr>
+                <td colSpan="5" className="table-message error-table-message">
+                  <div className="empty-icon error-icon" style={{ color: '#E53E3E' }}>⚠</div>
+                  <strong>Could not load property records</strong>
+                  <p>Check the backend database connection and try again.</p>
+                  {onRetry && (
+                    <button
+                      className="text-button"
+                      type="button"
+                      onClick={onRetry}
+                      style={{ marginTop: '8px' }}
+                    >
+                      ↻ Retry loading
+                    </button>
+                  )}
                 </td>
               </tr>
             ) : filteredProperties.length === 0 ? (
