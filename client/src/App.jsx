@@ -7,6 +7,7 @@ import PortfolioSnapshot from './components/PortfolioSnapshot'
 import Sidebar from './components/layouts/sidebar'
 import Topbar from './components/layouts/topbar'
 import { NAV_ITEMS } from './components/layouts/navigation'
+import WorkerDashboard from './components/modules/worker/WorkerDashboard'
 import {
   TenantManagement,
   MaintenanceManagement,
@@ -442,6 +443,16 @@ function App() {
   function navigate(section) {
     setActiveSection(section)
     setNotice('')
+  }
+
+  if (activeSection === 'worker') {
+    return (
+      <WorkerDashboard
+        companyId={companyId}
+        companyName={selectedCompany?.name || companyId}
+        onBack={() => navigate('overview')}
+      />
+    )
   }
 
   return (

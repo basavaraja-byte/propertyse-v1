@@ -5,4 +5,5 @@ export const NAV_ITEMS = [
   { section: 'companies', label: 'Companies', icon: '▤' },
   { section: 'tenants', label: 'Tenants & rent', icon: '♙' },
   { section: 'maintenance', label: 'Maintenance', icon: '⚒' },
+  { section: 'worker', label: 'Worker Portal', icon: '🔧' },
 ]
