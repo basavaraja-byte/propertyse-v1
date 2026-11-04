@@ -1,0 +1,60 @@
+:root {
+  /* Brand colors */
+  --primary: #4168DF;
+  --primary-hover: #3155C7;
+  --primary-light: #EEF2FF;
+  --primary-rgb: 65, 104, 223;
+
+  /* Surfaces & Backgrounds */
+  --bg-main: #F5F7FB;
+  --bg-card: #FFFFFF;
+  --bg-sidebar: #FFFFFF;
+  --bg-topbar: #FFFFFF;
+  --bg-subtle: #F8FAFD;
+  --bg-hover: #F1F5F9;
+
+  /* Typography */
+  --text-primary: #1D2940;
+  --text-secondary: #8995A8;
+  --text-muted: #A0ABC0;
+  --text-inverse: #FFFFFF;
+
+  /* Borders & Dividers */
+  --border-color: #E8EDF5;
+  --border-light: #F1F4F9;
+  --border-focus: #4168DF;
+
+  /* Status / Feedback colors */
+  --success: #20B681;
+  --success-bg: #E8F9F3;
+  --danger: #D85E67;
+  --danger-bg: #FDF0F1;
+  --warning: #F59E0B;
+  --warning-bg: #FEF7E6;
+  --info: #3B82F6;
+  --info-bg: #EFF6FF;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(29, 41, 64, 0.04), 0 1px 2px rgba(29, 41, 64, 0.02);
+  --shadow-md: 0 4px 12px rgba(29, 41, 64, 0.06), 0 1px 3px rgba(29, 41, 64, 0.04);
+  --shadow-lg: 0 10px 25px rgba(29, 41, 64, 0.08), 0 4px 10px rgba(29, 41, 64, 0.04);
+  --shadow-modal: 0 20px 40px rgba(15, 23, 42, 0.16);
+
+  /* Radii */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+
+  /* Layout dimensions */
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 76px;
+  --topbar-height: 72px;
+}
+
