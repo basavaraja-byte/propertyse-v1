@@ -1752,3 +1752,106 @@
 @media (max-width: 640px) { .modal-backdrop { padding: 12px; } .action-modal { padding: 26px 20px 20px; border-radius: 14px; } .company-create-form { grid-template-columns: 1fr; } .company-card { align-items: flex-start; flex-wrap: wrap; } .company-remove-button { margin-left: 58px; } }
 
 .modal-error { margin: 0 0 18px; padding: 12px 14px; border: 1px solid #f3c6c2; border-radius: 9px; background: #fff5f4; color: #a3231b; font-size: 14px; line-height: 1.45; }
+
+/* ==========================================================================
+   PropertySE Development Workspace Switcher (Dev Mode Only)
+   ========================================================================== */
+.dev-owner-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.dev-portal-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 24px;
+  background: #1e293b;
+  color: #f8fafc;
+  font-size: 13px;
+  border-bottom: 1px solid #334155;
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.dev-portal-banner-owner {
+  background: #0f172a;
+  border-bottom: 1px solid #1e293b;
+}
+
+.dev-portal-banner-copy {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dev-portal-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  background: #f59e0b;
+  color: #0f172a;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.dev-portal-switch-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: #3b82f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.dev-portal-switch-button:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.dev-portal-switch-button:active {
+  transform: translateY(0);
+}
+
+.sidebar-dev-portal {
+  margin: 16px 0 8px;
+  padding-top: 14px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.dev-portal-item {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.dev-portal-item:hover {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.dev-preview-tag {
+  margin-left: auto;
+  padding: 2px 6px;
+  background: #3b82f6;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+

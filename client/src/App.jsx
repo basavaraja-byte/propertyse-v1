@@ -13,6 +13,9 @@ import {
   MaintenanceManagement,
   CompanyManagement,
 } from './components/modules/ManagementModules'
+import OwnerDashboard from './components/owner/OwnerDashboard'
+
+const isDev = typeof import.meta !== 'undefined' && Boolean(!import.meta.env?.PROD)
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
@@ -57,6 +60,30 @@ function App() {
   const [formCompanyId, setFormCompanyId] = useState('COMP_001')
   const [properties, setProperties] = useState([])
   const [activeSection, setActiveSection] = useState('overview')
+  const [devWorkspace, setDevWorkspace] = useState(() => {
+    if (typeof window !== 'undefined' && isDev) {
+      if (
+        window.location.hash === '#owner' ||
+        new URLSearchParams(window.location.search).get('portal') === 'owner'
+      ) {
+        return 'owner'
+      }
+    }
+    return 'manager'
+  })
+
+  useEffect(() => {
+    if (!isDev) return
+    function handleHashChange() {
+      if (window.location.hash === '#owner') {
+        setDevWorkspace('owner')
+      } else if (!window.location.hash || window.location.hash === '#manager') {
+        setDevWorkspace('manager')
+      }
+    }
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [showForm, setShowForm] = useState(false)
@@ -445,6 +472,42 @@ function App() {
     setNotice('')
   }
 
+  if (isDev && devWorkspace === 'owner') {
+    return (
+      <div className="dev-owner-container">
+        <aside
+          className="dev-portal-banner dev-portal-banner-owner"
+          aria-label="Development preview banner"
+        >
+          <div className="dev-portal-banner-copy">
+            <span className="dev-portal-badge">DEV PREVIEW</span>
+            <span>
+              PropertySE Owner Portal: <strong>Preview Mode Active</strong> (Mock
+              Data Loaded · Supabase Connection Not Required)
+            </span>
+          </div>
+          <button
+            type="button"
+            className="dev-portal-switch-button"
+            onClick={() => {
+              setDevWorkspace('manager')
+              if (window.location.hash === '#owner') {
+                window.location.hash = ''
+              }
+            }}
+          >
+            ← Switch to Property Manager Workspace
+          </button>
+        </aside>
+        <OwnerDashboard
+          onBackToManager={() => {
+            setDevWorkspace('manager')
+            if (window.location.hash === '#owner') {
+              window.location.hash = ''
+            }
+          }}
+        />
+      </div>
   if (activeSection === 'worker') {
     return (
       <WorkerDashboard
@@ -465,9 +528,41 @@ function App() {
         navigate={navigate}
         total={total}
         selectedCompany={selectedCompany}
+        onOpenOwner={
+          isDev
+            ? () => {
+                setDevWorkspace('owner')
+                window.location.hash = '#owner'
+              }
+            : undefined
+        }
       />
 
       <main className="main-content">
+        {isDev && (
+          <aside
+            className="dev-portal-banner dev-portal-banner-manager"
+            aria-label="Development preview banner"
+          >
+            <div className="dev-portal-banner-copy">
+              <span className="dev-portal-badge">DEV MODE</span>
+              <span>
+                PropertySE Workspace: <strong>Property Manager</strong>
+              </span>
+            </div>
+            <button
+              type="button"
+              className="dev-portal-switch-button"
+              onClick={() => {
+                setDevWorkspace('owner')
+                window.location.hash = '#owner'
+              }}
+            >
+              🔑 Open Owner Dashboard (Preview) →
+            </button>
+          </aside>
+        )}
+
         <Topbar
           activeLabel={activeLabel}
           selectedCompany={selectedCompany}
