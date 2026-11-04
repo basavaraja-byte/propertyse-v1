@@ -1,0 +1,2288 @@
+/* ==========================================================================
+   PropertySE Owner Portal - Isolated Stylesheet
+   Strict Scoping Rule: All selectors must be scoped under .owner-dashboard
+   ========================================================================== */
+
+.owner-dashboard {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  color: #0f172a;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.owner-dashboard *,
+.owner-dashboard *::before,
+.owner-dashboard *::after {
+  box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------------------
+   Backdrop (Mobile Navigation)
+   -------------------------------------------------------------------------- */
+.owner-dashboard-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 90;
+}
+
+/* --------------------------------------------------------------------------
+   Sidebar
+   -------------------------------------------------------------------------- */
+.owner-dashboard .owner-dashboard-sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 260px;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  overflow-y: auto;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.owner-dashboard .owner-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.owner-dashboard .owner-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.owner-dashboard .owner-brand-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+
+.owner-dashboard .owner-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.owner-dashboard .owner-brand-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.3px;
+}
+
+.owner-dashboard .owner-brand-title strong {
+  color: #2563eb;
+}
+
+.owner-dashboard .owner-brand-badge {
+  font-size: 9px;
+  font-weight: 700;
+  color: #2563eb;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.owner-dashboard .owner-sidebar-close {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* Owner Profile Card inside Sidebar */
+.owner-dashboard .owner-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 14px 12px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.owner-dashboard .owner-profile-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid #bfdbfe;
+  flex-shrink: 0;
+}
+
+.owner-dashboard .owner-profile-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.owner-dashboard .owner-profile-eyebrow {
+  font-size: 9px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.6px;
+}
+
+.owner-dashboard .owner-profile-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.owner-dashboard .owner-profile-subtext {
+  font-size: 11px;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Sidebar Navigation Items */
+.owner-dashboard .owner-sidebar-nav {
+  flex: 1;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.owner-dashboard .owner-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.owner-dashboard .owner-nav-group-label {
+  padding: 0 10px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.owner-dashboard .owner-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.owner-dashboard .owner-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border: none;
+  background: transparent;
+  color: #475569;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease-in-out;
+  width: 100%;
+}
+
+.owner-dashboard .owner-nav-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-nav-item.active {
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.owner-dashboard .owner-nav-icon {
+  font-size: 15px;
+  width: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+.owner-dashboard .owner-nav-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.owner-dashboard .owner-nav-counter {
+  background: #ffffff;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 12px;
+  border: 1px solid #bfdbfe;
+}
+
+.owner-dashboard .owner-sidebar-footer {
+  padding: 14px 14px 18px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.owner-dashboard .owner-support-card {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+.owner-dashboard .owner-support-icon {
+  font-size: 14px;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.owner-dashboard .owner-support-card strong {
+  display: block;
+  color: #0f172a;
+  margin-bottom: 2px;
+}
+
+.owner-dashboard .owner-support-card p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
+   Main Workspace Layout
+   -------------------------------------------------------------------------- */
+.owner-dashboard .owner-dashboard-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: 260px;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+/* --------------------------------------------------------------------------
+   Topbar
+   -------------------------------------------------------------------------- */
+.owner-dashboard .owner-topbar {
+  height: 64px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.owner-dashboard .owner-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.owner-dashboard .owner-hamburger-button {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.owner-dashboard .owner-hamburger-bar {
+  height: 2px;
+  width: 100%;
+  background-color: #334155;
+  border-radius: 2px;
+}
+
+.owner-dashboard .owner-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.owner-dashboard .owner-breadcrumb-root {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.owner-dashboard .owner-breadcrumb-separator {
+  color: #cbd5e1;
+}
+
+.owner-dashboard .owner-breadcrumb-current {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.owner-dashboard .owner-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #15803d;
+}
+
+.owner-dashboard .owner-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.owner-dashboard .owner-role-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  letter-spacing: 0.5px;
+}
+
+.owner-dashboard .owner-topbar-icon-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #475569;
+  font-size: 16px;
+  transition: all 0.15s ease-in-out;
+}
+
+.owner-dashboard .owner-topbar-icon-button:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+}
+
+.owner-dashboard .owner-topbar-divider {
+  width: 1px;
+  height: 24px;
+  background: #e2e8f0;
+}
+
+.owner-dashboard .owner-topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.owner-dashboard .owner-topbar-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.owner-dashboard .owner-topbar-username {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* --------------------------------------------------------------------------
+   Content Wrapper
+   -------------------------------------------------------------------------- */
+.owner-dashboard .owner-dashboard-content {
+  flex: 1;
+  padding: 28px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.owner-dashboard .owner-dashboard-footer {
+  padding: 18px 28px;
+  font-size: 12px;
+  color: #94a3b8;
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.owner-dashboard .owner-footer-note code {
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #475569;
+}
+
+/* --------------------------------------------------------------------------
+   Overview View Styles
+   -------------------------------------------------------------------------- */
+.owner-dashboard .owner-overview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Preview Banner */
+.owner-dashboard .owner-preview-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #92400e;
+}
+
+.owner-dashboard .owner-preview-tag {
+  background: #fde68a;
+  color: #78350f;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+/* Page Heading */
+.owner-dashboard .owner-page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.owner-dashboard .owner-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  color: #2563eb;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.owner-dashboard .owner-page-heading h2 {
+  margin: 4px 0 6px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-page-heading p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  max-width: 650px;
+}
+
+/* Primary Button */
+.owner-dashboard .owner-primary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: #2563eb;
+  color: #ffffff;
+  border: 1px solid #1d4ed8;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease-in-out;
+  white-space: nowrap;
+}
+
+.owner-dashboard .owner-primary-button:hover {
+  background: #1d4ed8;
+}
+
+/* Text Button */
+.owner-dashboard .owner-text-button {
+  background: transparent;
+  border: none;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.owner-dashboard .owner-text-button:hover {
+  background: #eff6ff;
+}
+
+/* --------------------------------------------------------------------------
+   Six KPI Cards Grid
+   -------------------------------------------------------------------------- */
+.owner-dashboard .owner-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.owner-dashboard .owner-kpi-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.owner-dashboard .owner-kpi-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.owner-dashboard .owner-kpi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.owner-dashboard .owner-kpi-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.owner-dashboard .owner-kpi-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.owner-dashboard .owner-kpi-icon.blue { background: #eff6ff; color: #2563eb; }
+.owner-dashboard .owner-kpi-icon.purple { background: #faf5ff; color: #9333ea; }
+.owner-dashboard .owner-kpi-icon.green { background: #f0fdf4; color: #16a34a; }
+.owner-dashboard .owner-kpi-icon.orange { background: #fff7ed; color: #ea580c; }
+.owner-dashboard .owner-kpi-icon.indigo { background: #eef2ff; color: #4f46e5; }
+.owner-dashboard .owner-kpi-icon.emerald { background: #ecfdf5; color: #059669; }
+
+.owner-dashboard .owner-kpi-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+}
+
+.owner-dashboard .owner-kpi-detail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.owner-dashboard .owner-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.owner-dashboard .owner-dot.blue { background: #2563eb; }
+.owner-dashboard .owner-dot.purple { background: #9333ea; }
+.owner-dashboard .owner-dot.green { background: #16a34a; }
+.owner-dashboard .owner-dot.orange { background: #ea580c; }
+.owner-dashboard .owner-dot.indigo { background: #4f46e5; }
+.owner-dashboard .owner-dot.emerald { background: #059669; }
+
+/* --------------------------------------------------------------------------
+   Panels & Analytics Row
+   -------------------------------------------------------------------------- */
+.owner-dashboard .owner-analytics-row {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 20px;
+}
+
+.owner-dashboard .owner-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.owner-dashboard .owner-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.owner-dashboard .owner-panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-panel-header p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Occupancy Breakdown */
+.owner-dashboard .owner-occupancy-badge {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 14px;
+}
+
+.owner-dashboard .owner-progress-bar {
+  display: flex;
+  height: 14px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  overflow: hidden;
+  gap: 2px;
+}
+
+.owner-dashboard .owner-progress-segment.occupied {
+  background: #9333ea;
+  transition: width 0.3s ease;
+}
+
+.owner-dashboard .owner-progress-segment.vacant {
+  background: #16a34a;
+  transition: width 0.3s ease;
+}
+
+.owner-dashboard .owner-progress-segment.maintenance {
+  background: #ea580c;
+  transition: width 0.3s ease;
+}
+
+.owner-dashboard .owner-occupancy-legend {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.owner-dashboard .owner-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #475569;
+}
+
+.owner-dashboard .owner-legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+}
+
+.owner-dashboard .owner-legend-dot.occupied { background: #9333ea; }
+.owner-dashboard .owner-legend-dot.vacant { background: #16a34a; }
+.owner-dashboard .owner-legend-dot.maintenance { background: #ea580c; }
+
+.owner-dashboard .owner-yield-callout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  margin-top: 4px;
+}
+
+.owner-dashboard .owner-yield-copy strong {
+  display: block;
+  font-size: 12px;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-yield-copy small {
+  font-size: 11px;
+  color: #64748b;
+  display: block;
+  margin-top: 2px;
+}
+
+.owner-dashboard .owner-yield-amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #059669;
+}
+
+/* Alerts List */
+.owner-dashboard .owner-alert-count-pill {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 14px;
+}
+
+.owner-dashboard .owner-alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.owner-dashboard .owner-alert-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.owner-dashboard .owner-alert-item.severity-warning {
+  border-left: 4px solid #f59e0b;
+  background: #fffbeb;
+}
+
+.owner-dashboard .owner-alert-item.severity-urgent {
+  border-left: 4px solid #ef4444;
+  background: #fef2f2;
+}
+
+.owner-dashboard .owner-alert-item.severity-info {
+  border-left: 4px solid #3b82f6;
+  background: #eff6ff;
+}
+
+.owner-dashboard .owner-alert-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.owner-dashboard .owner-alert-body {
+  flex: 1;
+  font-size: 12px;
+}
+
+.owner-dashboard .owner-alert-body strong {
+  display: block;
+  color: #0f172a;
+  margin-bottom: 2px;
+}
+
+.owner-dashboard .owner-alert-body p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.owner-dashboard .owner-alert-action-tag {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.owner-dashboard .owner-empty-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px;
+  background: #f8fafc;
+  border-radius: 8px;
+  color: #16a34a;
+  font-size: 12px;
+}
+
+.owner-dashboard .owner-empty-check {
+  font-weight: bold;
+}
+
+/* --------------------------------------------------------------------------
+   Table Styles
+   -------------------------------------------------------------------------- */
+.owner-dashboard .owner-table-scroll {
+  overflow-x: auto;
+}
+
+.owner-dashboard .owner-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+.owner-dashboard .owner-table th {
+  padding: 10px 14px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.owner-dashboard .owner-table td {
+  padding: 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.owner-dashboard .owner-table tr:hover td {
+  background-color: #f8fafc;
+}
+
+.owner-dashboard .owner-unit-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: 6px;
+  border: 1px solid #bfdbfe;
+}
+
+.owner-dashboard .owner-table-subtext {
+  display: block;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.owner-dashboard .owner-status-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.owner-dashboard .owner-status-tag.status-occupied {
+  background: #faf5ff;
+  color: #9333ea;
+  border: 1px solid #e9d5ff;
+}
+
+.owner-dashboard .owner-status-tag.status-vacant {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.owner-dashboard .owner-status-tag.status-maintenance {
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
+}
+
+.owner-dashboard .owner-rent-cell {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-table-action-button {
+  padding: 5px 12px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.owner-dashboard .owner-table-action-button:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.owner-dashboard .owner-empty-table-state {
+  padding: 32px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+/* --------------------------------------------------------------------------
+   Activity Timeline
+   -------------------------------------------------------------------------- */
+.owner-dashboard .owner-activity-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.owner-dashboard .owner-activity-entry {
+  display: flex;
+  gap: 14px;
+  position: relative;
+}
+
+.owner-dashboard .owner-activity-marker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.owner-dashboard .owner-activity-bullet {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #94a3b8;
+  margin-top: 5px;
+}
+
+.owner-dashboard .owner-activity-bullet.type-lease { background: #2563eb; }
+.owner-dashboard .owner-activity-bullet.type-maintenance { background: #16a34a; }
+.owner-dashboard .owner-activity-bullet.type-audit { background: #f59e0b; }
+
+.owner-dashboard .owner-activity-content {
+  flex: 1;
+  font-size: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.owner-dashboard .owner-activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.owner-dashboard .owner-activity-header strong {
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-activity-time {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.owner-dashboard .owner-activity-content p {
+  margin: 0;
+  color: #64748b;
+}
+
+/* --------------------------------------------------------------------------
+   Step 4 Placeholder Views
+   -------------------------------------------------------------------------- */
+.owner-dashboard .owner-placeholder-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 480px;
+  padding: 40px 20px;
+}
+
+.owner-dashboard .owner-placeholder-card {
+  max-width: 520px;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 40px 32px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.owner-dashboard .owner-placeholder-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 28px;
+  margin-bottom: 16px;
+}
+
+.owner-dashboard .owner-placeholder-tag {
+  font-size: 10px;
+  font-weight: 800;
+  color: #2563eb;
+  background: #eff6ff;
+  padding: 3px 10px;
+  border-radius: 12px;
+  letter-spacing: 0.8px;
+  margin-bottom: 12px;
+}
+
+.owner-dashboard .owner-placeholder-card h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-placeholder-card p {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+/* Loading & Error States */
+.owner-dashboard .owner-view-loading,
+.owner-dashboard .owner-overview-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #64748b;
+}
+
+.owner-dashboard .owner-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: owner-spin 0.8s linear infinite;
+  margin-bottom: 14px;
+}
+
+@keyframes owner-spin {
+  to { transform: rotate(360deg); }
+}
+
+.owner-dashboard .owner-view-error,
+.owner-dashboard .owner-overview-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  color: #991b1b;
+  margin-bottom: 20px;
+}
+
+.owner-dashboard .owner-retry-button {
+  padding: 6px 14px;
+  background: #991b1b;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive Layout Media Queries
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .owner-dashboard .owner-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .owner-dashboard .owner-analytics-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .owner-dashboard .owner-dashboard-sidebar {
+    transform: translateX(-100%);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .owner-dashboard .owner-dashboard-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .owner-dashboard .owner-sidebar-close {
+    display: block;
+  }
+
+  .owner-dashboard .owner-dashboard-main {
+    margin-left: 0;
+  }
+
+  .owner-dashboard .owner-hamburger-button {
+    display: flex;
+  }
+
+  .owner-dashboard .owner-topbar {
+    padding: 0 16px;
+  }
+
+  .owner-dashboard .owner-dashboard-content {
+    padding: 16px;
+  }
+
+  .owner-dashboard .owner-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-dashboard .owner-page-heading {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .owner-dashboard .owner-topbar-username {
+    display: none;
+  }
+
+  .owner-dashboard .owner-status-text {
+    display: none;
+  }
+
+  .owner-dashboard .owner-dashboard-footer {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+}
+
+/* ==========================================================================
+   Step 4 Views Additional Scoped Styles
+   ========================================================================== */
+
+.owner-dashboard .owner-view-container {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.owner-dashboard .owner-view-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.owner-dashboard .owner-view-header h2 {
+  margin: 4px 0 6px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-view-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  max-width: 650px;
+}
+
+.owner-dashboard .owner-view-header-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.owner-dashboard .owner-inline-badge {
+  padding: 6px 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #475569;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.owner-dashboard .owner-inline-badge strong {
+  color: #0f172a;
+  margin-right: 4px;
+}
+
+.owner-dashboard .owner-badge-neutral {
+  padding: 3px 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* Filter and Search Bar */
+.owner-dashboard .owner-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.owner-dashboard .owner-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  min-width: 300px;
+  flex: 1;
+  max-width: 440px;
+  height: 40px;
+}
+
+.owner-dashboard .owner-search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  color: #0f172a;
+  width: 100%;
+}
+
+.owner-dashboard .owner-search-clear {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.owner-dashboard .owner-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.owner-dashboard .owner-filter-tabs {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  background: #f1f5f9;
+  border-radius: 8px;
+}
+
+.owner-dashboard .owner-filter-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.owner-dashboard .owner-filter-tab.active {
+  background: #ffffff;
+  color: #2563eb;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.owner-dashboard .owner-tab-count {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.owner-dashboard .owner-filter-tab.active .owner-tab-count {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.owner-dashboard .owner-view-toggle {
+  display: flex;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.owner-dashboard .owner-toggle-btn {
+  padding: 7px 12px;
+  border: none;
+  background: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.owner-dashboard .owner-toggle-btn.active {
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.owner-dashboard .owner-select {
+  padding: 7px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 12px;
+  color: #0f172a;
+  outline: none;
+}
+
+.owner-dashboard .owner-select-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Property Cards Grid */
+.owner-dashboard .owner-property-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.owner-dashboard .owner-property-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease-in-out;
+}
+
+.owner-dashboard .owner-property-card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+}
+
+.owner-dashboard .owner-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.owner-dashboard .owner-card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-card-subtitle {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.owner-dashboard .owner-card-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.owner-dashboard .owner-metric-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.owner-dashboard .owner-metric-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.owner-dashboard .owner-metric-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-card-tenant-box {
+  font-size: 12px;
+  padding: 10px;
+  border-left: 3px solid #2563eb;
+  background: #f8fafc;
+  border-radius: 4px;
+}
+
+.owner-dashboard .owner-tenant-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.owner-dashboard .owner-tenant-detail strong {
+  display: block;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-tenant-detail small {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.owner-dashboard .owner-tenant-vacant {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.owner-dashboard .owner-card-footer {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.owner-dashboard .owner-card-action-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563eb;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.owner-dashboard .owner-card-action-btn:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+/* Property Details Grid */
+.owner-dashboard .owner-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.owner-dashboard .owner-details-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.owner-dashboard .owner-unit-selector-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.owner-dashboard .owner-spec-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.owner-dashboard .owner-spec-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 12px;
+}
+
+.owner-dashboard .owner-spec-row:last-child {
+  border-bottom: none;
+}
+
+.owner-dashboard .owner-spec-label {
+  color: #64748b;
+}
+
+.owner-dashboard .owner-spec-val {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.owner-dashboard .owner-financial-card-box {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.owner-dashboard .owner-fin-metric {
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.owner-dashboard .owner-fin-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.owner-dashboard .owner-fin-amount {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 4px 0;
+}
+
+.owner-dashboard .owner-fin-sub {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.owner-dashboard .owner-tenant-card-expanded {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.owner-dashboard .owner-tenant-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.owner-dashboard .owner-tenant-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 15px;
+  font-weight: 700;
+  border: 1px solid #bfdbfe;
+}
+
+.owner-dashboard .owner-tenant-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-tenant-sub {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.owner-dashboard .owner-empty-state-compact {
+  padding: 24px;
+  text-align: center;
+  color: #64748b;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.owner-dashboard .owner-empty-state-compact strong {
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-empty-state-compact p {
+  margin: 0;
+  font-size: 11px;
+}
+
+.owner-dashboard .owner-empty-icon-sm {
+  font-size: 24px;
+  color: #94a3b8;
+}
+
+.owner-dashboard .owner-ticket-compact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.owner-dashboard .owner-ticket-item {
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.owner-dashboard .owner-ticket-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.owner-dashboard .owner-ticket-category {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-ticket-desc {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #475569;
+}
+
+.owner-dashboard .owner-ticket-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.owner-dashboard .owner-priority-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.owner-dashboard .owner-priority-pill.priority-urgent {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.owner-dashboard .owner-priority-pill.priority-high {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.owner-dashboard .owner-priority-pill.priority-medium {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.owner-dashboard .owner-priority-pill.priority-low {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.owner-dashboard .owner-ticket-date {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* Tenant Directory Grid */
+.owner-dashboard .owner-tenant-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.owner-dashboard .owner-tenant-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.owner-dashboard .owner-tenant-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.owner-dashboard .owner-tenant-card-header .owner-unit-pill {
+  margin-left: auto;
+}
+
+.owner-dashboard .owner-contact-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.owner-dashboard .owner-contact-link:hover {
+  text-decoration: underline;
+}
+
+.owner-dashboard .owner-tenant-card-footer {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Notice & Callouts */
+.owner-dashboard .owner-callout-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  font-size: 12px;
+  color: #1e40af;
+}
+
+.owner-dashboard .owner-callout-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.owner-dashboard .owner-callout-notice strong {
+  display: block;
+  margin-bottom: 2px;
+  color: #1e3a8a;
+}
+
+.owner-dashboard .owner-callout-notice p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.owner-dashboard .owner-table-total-row td {
+  background: #f8fafc;
+  border-top: 2px solid #cbd5e1;
+  font-weight: 700;
+}
+
+.owner-dashboard .owner-payment-guidance {
+  margin-top: 18px;
+  padding: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 12px;
+}
+
+.owner-dashboard .owner-payment-guidance ol {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+/* Notifications Feed */
+.owner-dashboard .owner-notifications-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.owner-dashboard .owner-notification-card {
+  display: flex;
+  gap: 16px;
+  padding: 18px;
+}
+
+.owner-dashboard .owner-notification-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #eff6ff;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.owner-dashboard .owner-notification-card.severity-warning .owner-notification-icon-wrapper {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.owner-dashboard .owner-notification-card.severity-urgent .owner-notification-icon-wrapper {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.owner-dashboard .owner-notification-content {
+  flex: 1;
+}
+
+.owner-dashboard .owner-notification-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.owner-dashboard .owner-severity-pill {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.owner-dashboard .owner-severity-pill.severity-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.owner-dashboard .owner-severity-pill.severity-urgent {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.owner-dashboard .owner-severity-pill.severity-info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.owner-dashboard .owner-notification-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-notification-message {
+  margin: 0;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.owner-dashboard .owner-notification-footer {
+  margin-top: 8px;
+}
+
+/* Settings & Profile Grid */
+.owner-dashboard .owner-settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.owner-dashboard .owner-settings-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.owner-dashboard .owner-settings-note {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: 10px 0 0;
+  line-height: 1.5;
+}
+
+.owner-dashboard .owner-payout-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.owner-dashboard .owner-bank-icon {
+  font-size: 26px;
+}
+
+.owner-dashboard .owner-payout-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.owner-dashboard .owner-payout-details strong {
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-payout-acc {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563eb;
+  letter-spacing: 1px;
+}
+
+.owner-dashboard .owner-payout-type {
+  font-size: 10px;
+  color: #64748b;
+}
+
+.owner-dashboard .owner-preferences-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.owner-dashboard .owner-preference-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  gap: 16px;
+}
+
+.owner-dashboard .owner-preference-item strong {
+  display: block;
+  font-size: 13px;
+  color: #0f172a;
+  margin-bottom: 2px;
+}
+
+.owner-dashboard .owner-preference-item p {
+  margin: 0;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.owner-dashboard .owner-preference-item input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #2563eb;
+}
+
+.owner-dashboard .owner-form-footer {
+  margin-top: 10px;
+}
+
+/* Report Printable Layout */
+.owner-dashboard .owner-report-document {
+  padding: 32px;
+}
+
+.owner-dashboard .owner-report-header {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 24px;
+}
+
+.owner-dashboard .owner-report-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.owner-dashboard .owner-report-brand h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-report-brand p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.owner-dashboard .owner-report-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: #64748b;
+  text-align: right;
+}
+
+.owner-dashboard .owner-report-meta strong {
+  color: #0f172a;
+  margin-left: 4px;
+}
+
+.owner-dashboard .owner-report-section {
+  margin-bottom: 24px;
+}
+
+.owner-dashboard .owner-report-section-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 6px;
+}
+
+.owner-dashboard .owner-report-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  background: #f8fafc;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.owner-dashboard .owner-report-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.owner-dashboard .owner-report-stat strong {
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.owner-dashboard .owner-report-table {
+  font-size: 12px;
+}
+
+.owner-dashboard .owner-report-footer {
+  margin-top: 24px;
+  padding-top: 14px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 10px;
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+/* Print Media Query */
+@media print {
+  .owner-dashboard .owner-dashboard-sidebar,
+  .owner-dashboard .owner-topbar,
+  .owner-dashboard .owner-no-print {
+    display: none !important;
+  }
+
+  .owner-dashboard .owner-dashboard-main {
+    margin-left: 0 !important;
+  }
+
+  .owner-dashboard .owner-dashboard-content {
+    padding: 0 !important;
+  }
+
+  .owner-dashboard .owner-report-document {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+}
+
+/* Tablet & Mobile Adjustments for Step 4 Views */
+@media (max-width: 1024px) {
+  .owner-dashboard .owner-property-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .owner-dashboard .owner-details-grid,
+  .owner-dashboard .owner-settings-grid,
+  .owner-dashboard .owner-tenant-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .owner-dashboard .owner-property-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-dashboard .owner-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .owner-dashboard .owner-search-box {
+    max-width: none;
+    min-width: 0;
+  }
+
+  .owner-dashboard .owner-filter-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .owner-dashboard .owner-filter-tabs {
+    overflow-x: auto;
+  }
+
+  .owner-dashboard .owner-report-summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Development Portal Switcher Buttons
+   -------------------------------------------------------------------------- */
+.owner-dashboard .owner-topbar-portal-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.owner-dashboard .owner-topbar-portal-switch:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.owner-dashboard .owner-sidebar-return-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.owner-dashboard .owner-sidebar-return-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+

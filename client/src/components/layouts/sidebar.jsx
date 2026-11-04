@@ -8,6 +8,7 @@ function Sidebar({
   navigate,
   total,
   selectedCompany,
+  onOpenOwner,
 }) {
   return (
     <aside className="sidebar">
@@ -60,6 +61,22 @@ function Sidebar({
           </button>
         ))}
       </nav>
+
+      {onOpenOwner && (
+        <div className="sidebar-dev-portal">
+          <div className="nav-label">DEV PORTAL PREVIEW</div>
+          <button
+            type="button"
+            className="nav-item dev-portal-item"
+            onClick={onOpenOwner}
+            title="Switch to Owner Dashboard in Dev Preview mode"
+          >
+            <span className="nav-icon">🔑</span>
+            <span>Owner Dashboard</span>
+            <span className="dev-preview-tag">PREVIEW</span>
+          </button>
+        </div>
+      )}
 
       <div className="sidebar-bottom">
         <div className="sidebar-help">
