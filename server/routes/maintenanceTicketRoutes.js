@@ -36,6 +36,12 @@ function formatTicket(row) {
     description: row.description,
     priority: row.priority,
     status: row.status,
+    assignedTeam: row.assigned_team || null,
+    acceptedBy: row.accepted_by_worker || null,
+    acceptedAt: row.accepted_at || null,
+    completedAt: row.completed_at || null,
+    propertyName: row.property_name || null,
+    buildingNumber: row.building_number || null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -53,7 +59,11 @@ router.get("/", async (req, res) => {
     }
 
     const result = await db.query(
-      "SELECT * FROM public.maintenance_tickets WHERE company_id = $1 ORDER BY created_at DESC",
+      `SELECT mt.*, p.property_name, p.building_number
+       FROM public.maintenance_tickets mt
+       LEFT JOIN public.properties p ON p.id = mt.property_id AND p.company_id = mt.company_id
+       WHERE mt.company_id = $1
+       ORDER BY mt.created_at DESC`,
       [company]
     );
 
@@ -130,6 +140,17 @@ router.post("/", async (req, res) => {
       });
     }
 
+    const teamByCategory = {
+      Plumbing: "Plumbing",
+      Electrical: "Electrical",
+      "Air Conditioning": "AC",
+      Appliance: "Appliance",
+      Cleaning: "Cleaning",
+      Structural: "Structural",
+      Other: "General Review",
+    };
+    const assignedTeam = teamByCategory[category] || "General Review";
+
     const client = await db.getClient();
     try {
       await client.query("BEGIN");
@@ -137,8 +158,9 @@ router.post("/", async (req, res) => {
       const insertTicketSql = `
         INSERT INTO public.maintenance_tickets (
           company_id, property_id, unit_number, tenant_name,
-          category, description, priority, status, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'Open', NOW(), NOW())
+          category, description, priority, status, assigned_team,
+          created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'Open', $8, NOW(), NOW())
         RETURNING *
       `;
 
@@ -150,6 +172,7 @@ router.post("/", async (req, res) => {
         category,
         description.trim(),
         priority,
+        assignedTeam,
       ]);
 
       await client.query(
@@ -175,6 +198,81 @@ router.post("/", async (req, res) => {
   }
 });
 
+
+// PATCH /api/maintenance-tickets/:id/accept - atomic first-worker acceptance
+router.patch("/:id/accept", async (req, res) => {
+  const { id } = req.params;
+  const { workerName, workerTeam, companyId } = req.body || {};
+  if (!isUuid(id)) return res.status(400).json({ message: "Invalid ticket ID." });
+  if (!allowed(companyId) || typeof workerName !== "string" || !workerName.trim() ||
+      typeof workerTeam !== "string" || !workerTeam.trim()) {
+    return res.status(400).json({ message: "Valid worker and company details are required." });
+  }
+  try {
+    const result = await db.query(
+      `UPDATE public.maintenance_tickets
+       SET accepted_by_worker = $1, accepted_at = NOW(), updated_at = NOW()
+       WHERE id = $2 AND company_id = $3 AND assigned_team = $4
+         AND accepted_by_worker IS NULL AND status = 'Open'
+       RETURNING *`,
+      [workerName.trim(), id, companyId.trim(), workerTeam.trim()]
+    );
+    if (!result.rows.length) {
+      return res.status(409).json({ message: "This ticket is already accepted or is not available to your team." });
+    }
+    return res.status(200).json({ message: "Job accepted successfully.", ticket: formatTicket(result.rows[0]) });
+  } catch (error) {
+    console.error("Accept maintenance job error:", error);
+    return res.status(500).json(db.formatDbError("accept maintenance job", error));
+  }
+});
+
+// GET /api/maintenance-tickets/:id/notes
+router.get("/:id/notes", async (req, res) => {
+  const { id } = req.params;
+  const companyId = String(req.query.companyId || "").trim();
+  if (!isUuid(id) || !allowed(companyId)) return res.status(400).json({ message: "Valid ticket and company details are required." });
+  try {
+    const result = await db.query(
+      `SELECT n.id, n.worker_name, n.note, n.created_at
+       FROM public.maintenance_ticket_notes n
+       INNER JOIN public.maintenance_tickets t ON t.id = n.ticket_id AND t.company_id = n.company_id
+       WHERE n.ticket_id = $1 AND n.company_id = $2
+       ORDER BY n.created_at ASC`,
+      [id, companyId]
+    );
+    return res.json({ notes: result.rows.map(n => ({ id: n.id, workerName: n.worker_name, note: n.note, createdAt: n.created_at })) });
+  } catch (error) {
+    console.error("Load maintenance notes error:", error);
+    return res.status(500).json(db.formatDbError("load maintenance notes", error));
+  }
+});
+
+// POST /api/maintenance-tickets/:id/notes
+router.post("/:id/notes", async (req, res) => {
+  const { id } = req.params;
+  const { companyId, workerName, note } = req.body || {};
+  if (!isUuid(id) || !allowed(companyId) || typeof workerName !== "string" || !workerName.trim() ||
+      typeof note !== "string" || !note.trim() || note.trim().length > 2000) {
+    return res.status(400).json({ message: "A valid ticket, company, worker and note (up to 2000 characters) are required." });
+  }
+  try {
+    const result = await db.query(
+      `INSERT INTO public.maintenance_ticket_notes (ticket_id, company_id, worker_name, note)
+       SELECT id, company_id, $3, $4 FROM public.maintenance_tickets
+       WHERE id = $1 AND company_id = $2
+       RETURNING id, worker_name, note, created_at`,
+      [id, companyId.trim(), workerName.trim(), note.trim()]
+    );
+    if (!result.rows.length) return res.status(404).json({ message: "Maintenance ticket not found for this company." });
+    const n = result.rows[0];
+    return res.status(201).json({ message: "Progress note added.", note: { id: n.id, workerName: n.worker_name, note: n.note, createdAt: n.created_at } });
+  } catch (error) {
+    console.error("Add maintenance note error:", error);
+    return res.status(500).json(db.formatDbError("add maintenance note", error));
+  }
+});
+
 // PATCH /api/maintenance-tickets/:id/status - update ticket status and auto-adjust unit status
 router.patch("/:id/status", async (req, res) => {
   try {
@@ -185,7 +283,7 @@ router.patch("/:id/status", async (req, res) => {
       req.query?.companyId ??
       req.query?.company_id;
     const company = typeof rawCompany === "string" ? rawCompany.trim() : "";
-    const { status } = req.body || {};
+    const { status, workerName } = req.body || {};
 
     if (!allowed(company)) {
       return res
@@ -207,14 +305,19 @@ router.patch("/:id/status", async (req, res) => {
 
       const updateTicketSql = `
         UPDATE public.maintenance_tickets
-        SET status = $1, updated_at = NOW()
+        SET status = $1, completed_at = CASE WHEN $1 = 'Resolved' THEN COALESCE(completed_at, NOW()) ELSE NULL END, updated_at = NOW()
         WHERE id = $2 AND company_id = $3
+          AND ($4::text IS NULL OR accepted_by_worker = $4)
         RETURNING *
       `;
+      const workerIdentity = typeof workerName === "string" && workerName.trim()
+        ? workerName.trim()
+        : null;
       const updateResult = await client.query(updateTicketSql, [
         status,
         id,
         company,
+        workerIdentity,
       ]);
       const ticket = updateResult.rows[0];
 
